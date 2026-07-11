@@ -1,0 +1,19 @@
+{% extends 'tool_base.html' %}
+{% block title %}SD Checker{% endblock %}
+{% block heading %}SD Checker{% endblock %}
+{% block intro %}Convert service-writing abbreviations in pasted text or DOCX documents.{% endblock %}
+{% block content %}
+{% if error %}<div class="alert" role="alert">{{ error }}</div>{% endif %}
+
+<section class="sd-card text-card">
+    <div class="sd-card-heading"><span class="sd-icon">Aa</span><div><small>Instant text tool</small><h2>Text Abbreviation Converter</h2><p>Work in either direction without uploading a document.</p></div></div>
+    <form id="text-converter-form">{% csrf_token %}<div class="sd-text-panes"><label><span>Full text</span><textarea id="full-text" placeholder="Paste full text here…"></textarea><button type="button" data-convert="abbreviate">Abbreviate <b>→</b></button></label><div class="direction-mark">⇄</div><label><span>Abbreviated text</span><textarea id="short-text" placeholder="Paste abbreviated text here…"></textarea><button type="button" data-convert="deabbreviate"><b>←</b> Deabbreviate</button></label></div><div class="converter-message" id="converter-status">Ready to convert.</div></form>
+</section>
+
+<section class="sd-card docx-card">
+    <div class="sd-card-heading"><span class="sd-icon docx-icon">D</span><div><small>Document tool</small><h2>DOCX Converter</h2><p>Upload, process, and download while preserving document formatting.</p></div></div>
+    <form method="post" enctype="multipart/form-data" class="quick-docx-form">{% csrf_token %}<div class="quick-mode">{% for radio in form.operation_type %}<label>{{ radio.tag }}<span><b>{% if radio.data.value == 'abbreviate' %}Abbreviate{% else %}Deabbreviate{% endif %}</b><small>{% if radio.data.value == 'abbreviate' %}Replace full forms with approved abbreviations.{% else %}Expand clear abbreviations into full forms.{% endif %}</small></span></label>{% endfor %}</div><label class="quick-upload"><strong>Choose a DOCX document</strong><span>DOCX only · maximum 25 MB</span>{{ form.docx_file }}{{ form.docx_file.errors }}</label><button type="submit">Process and download <b>→</b></button></form>
+    <p class="quick-note">Ambiguous terms remain unchanged. Formatting is preserved.</p>
+</section>
+{% endblock %}
+{% block script %}<script>document.querySelectorAll('[data-convert]').forEach(button=>button.onclick=async()=>{const operation=button.dataset.convert,source=document.getElementById(operation==='abbreviate'?'full-text':'short-text'),target=document.getElementById(operation==='abbreviate'?'short-text':'full-text'),status=document.getElementById('converter-status');if(!source.value.trim()){status.textContent='Paste some text first.';return}button.disabled=true;status.textContent='Converting…';try{const response=await fetch('{% url "abbreviation_tool:text_convert" %}',{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':document.querySelector('#text-converter-form [name=csrfmiddlewaretoken]').value},body:JSON.stringify({operation,text:source.value})}),data=await response.json();if(!response.ok)throw new Error(data.error);target.value=data.result;status.textContent=`Done — ${data.replacement_count} replacement${data.replacement_count===1?'':'s'} made.`}catch(error){status.textContent=error.message}finally{button.disabled=false}});</script>{% endblock %}

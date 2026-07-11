@@ -1,0 +1,53 @@
+{% extends 'tool_base.html' %}{% load static %}{% block title %}Review Suggestions{% endblock %}{% block heading %}Review suggestions{% endblock %}{% block intro %}Approve only the changes that should be applied to {{ processing_session.original_filename }}.{% endblock %}{% block content %}{% if messages %}{% for message in messages %}<div class="alert">{{ message }}</div>{% endfor %}{% endif %}<div class="review-toolbar">
+<input id="suggestion-search" type="search" placeholder="Search suggestions…">
+<select id="status-filter">
+<option value="">All statuses</option>
+<option>pending</option>
+<option>accepted</option>
+<option>rejected</option>
+<option>edited</option>
+<option>ambiguous</option>
+</select>
+<select id="category-filter"><option value="">All categories</option>{% for category in categories %}<option value="{{ category }}">{{ category }}</option>{% endfor %}</select>
+<select id="ambiguity-filter">
+<option value="">All meanings</option>
+<option value="ambiguous">Ambiguous only</option>
+<option value="unambiguous">Unambiguous only</option>
+</select>
+<button data-bulk="accept">Accept visible</button>
+<button data-bulk="reject">Reject visible</button>
+<button data-bulk="high">Accept high-confidence</button>
+<button data-bulk="reset">Reset</button>
+<button data-history="undo">Undo</button>
+<button data-history="redo">Redo</button>
+</div>
+<div class="review-layout">
+<section class="document-preview" aria-label="Document preview">{% for container in preview %}<div class="preview-container {{ container.container_type }}" data-container="{{ container.identifier }}">{% for segment in container.segments %}{% if segment.suggestion_id %}<mark id="preview-{{ segment.suggestion_id }}" class="suggestion-mark {{ segment.status }}" data-suggestion="{{ segment.suggestion_id }}">{{ segment.text }}</mark>{% else %}{{ segment.text }}{% endif %}{% endfor %}</div>{% endfor %}</section>
+<aside class="suggestion-panel">{% for suggestion in suggestions %}<article class="suggestion-card {{ suggestion.review_status }}{% if suggestion.ambiguity_status == 'ambiguous' %} ambiguous{% endif %}" id="suggestion-{{ suggestion.id }}" data-id="{{ suggestion.id }}" data-status="{{ suggestion.review_status }}" data-ambiguity="{{ suggestion.ambiguity_status }}" data-category="{{ suggestion.abbreviation_entry.category.name }}" data-search="{{ suggestion.original_text }} {{ suggestion.proposed_text }} {{ suggestion.abbreviation_entry.category.name }}">
+<header>
+<span>{{ suggestion.abbreviation_entry.category.name|default:'General' }}</span>
+<strong>{{ suggestion.confidence }}%</strong>
+</header>
+<div class="replacement">
+<del>{{ suggestion.original_text }}</del>
+<b>→</b>
+<ins class="proposed">{{ suggestion.user_modified_text|default:suggestion.proposed_text }}</ins>
+</div>{% if suggestion.mixed_format_warning %}<small class="format-warning">Mixed formatting — replacement uses the first character’s style.</small>{% endif %}{% if suggestion.ambiguity_status == 'ambiguous' %}<label>Choose meaning<select class="meaning-select">
+<option value="">Select meaning</option>{% for suggestion_id, options in ambiguity_options.items %}{% if suggestion_id == suggestion.id|stringformat:'s' %}{% for option in options %}<option value="{{ option.id }}"{% if suggestion.selected_meaning_id == option.id %} selected{% endif %}>{{ option.full_form }}</option>{% endfor %}{% endif %}{% endfor %}</select>
+</label>{% endif %}<div class="suggestion-actions">
+<button data-action="accept">Accept</button>
+<button data-action="reject">Reject</button>
+<button data-action="edit">Edit</button>
+<button data-action="reset">Reset</button>
+</div>
+<small>{{ suggestion.container_type }} · {{ suggestion.abbreviation_entry.source_name }}{% if suggestion.abbreviation_entry.source_page %}, page {{ suggestion.abbreviation_entry.source_page }}{% endif %}</small>
+</article>{% empty %}<div class="empty-result">No eligible matches were found.</div>{% endfor %}</aside>
+</div>
+{% if processing_session.processing_options.glossary_mode != 'none' %}<details class="glossary-preview"><summary>Glossary preview ({{ glossary|length }})</summary><table><tr><th>Abbreviation</th><th>Full form</th></tr>{% for abbreviation, full_form in glossary %}<tr><td>{{ abbreviation }}</td><td>{{ full_form }}</td></tr>{% endfor %}</table>{% if processing_session.processing_options.glossary_mode == 'separate' or processing_session.processing_options.glossary_mode == 'preview' %}<a href="{% url 'abbreviation_tool:glossary_download' processing_session.id %}">Download glossary separately</a>{% endif %}</details>{% endif %}
+<div class="review-footer">
+<span>
+<strong id="accepted-count">{{ processing_session.accepted_count }}</strong> accepted · <strong id="rejected-count">{{ processing_session.rejected_count }}</strong> rejected · {{ processing_session.ambiguous_count }} ambiguous</span>
+<form method="post" action="{% url 'abbreviation_tool:generate' processing_session.id %}">{% csrf_token %}<button type="submit">Generate approved DOCX</button></form>
+</div>{{ ambiguity_options|json_script:'ambiguity-options' }}{% endblock %}{% block script %}<script>window.reviewConfig={session:'{{ processing_session.id }}',csrf:'{{ csrf_token }}',suggestionUrl:'{% url "abbreviation_tool:suggestion_api" processing_session.id "00000000-0000-0000-0000-000000000000" %}',bulkUrl:'{% url "abbreviation_tool:bulk_review_api" processing_session.id %}',historyUrl:'{% url "abbreviation_tool:history_api" processing_session.id %}'};</script>
+<script src="{% static 'js/abbreviation_review.js' %}">
+</script>{% endblock %}

@@ -1,0 +1,24 @@
+{% extends 'tool_base.html' %}
+{% block title %}JSSDM Checker{% endblock %}
+{% block heading %}JSSDM Checker{% endblock %}
+{% block intro %}Check abbreviations in a PDF against {{ database_count }} verified entries from JSSDM 2022, Section 16 and Annex 16A.{% endblock %}
+{% block content %}
+{% if error %}<div class="alert" role="alert">{{ error }}</div>{% endif %}
+<div class="two checker-actions">
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <h2>Check a document</h2>
+        <p>Upload a text-based PDF to identify recognized JSSDM abbreviations and candidates that need review.</p>
+        <label>PDF document<input name="pdf_file" type="file" accept="application/pdf,.pdf" required></label>
+        <button type="submit">Check abbreviations</button>
+    </form>
+    <form method="get">
+        <h2>Search the reference</h2>
+        <p>Look up an abbreviation or search words within its full meaning.</p>
+        <label>Abbreviation or meaning<input name="q" value="{{ query }}" placeholder="e.g. SITREP or Situation Report"></label>
+        <button type="submit">Search database</button>
+    </form>
+</div>
+{% if search_results %}<section class="jssdm-results"><h2>Reference results</h2><table><thead><tr><th>Abbreviation</th><th>Meaning</th><th>PDF page</th></tr></thead><tbody>{% for item in search_results %}<tr><td><strong>{{ item.abbreviation }}</strong></td><td>{{ item.meaning }}</td><td>{{ item.source_page }}</td></tr>{% endfor %}</tbody></table></section>{% elif query %}<div class="empty-result">No JSSDM entry matches “{{ query }}”.</div>{% endif %}
+{% if filename %}<section class="check-summary"><span>Checked document</span><h2>{{ filename }}</h2><p>{{ candidate_count }} abbreviation-like candidates found.</p></section><div class="two result-columns"><section><h2>Recognized <small>{{ recognized|length }}</small></h2>{% for item in recognized %}<article class="match"><strong>{{ item.value }}</strong><span>{{ item.meanings|join:"; " }}</span></article>{% empty %}<p>No reference matches found.</p>{% endfor %}</section><section><h2>Needs review <small>{{ unknown|length }}</small></h2><div class="token-list">{% for item in unknown %}<span>{{ item }}</span>{% empty %}<p>No unrecognized candidates.</p>{% endfor %}</div></section></div>{% endif %}
+{% endblock %}

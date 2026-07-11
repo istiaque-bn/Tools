@@ -1,0 +1,229 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Merge, split, and inspect PDF files with Necessary Tools.">
+    <title>PDF Toolkit | Necessary Tools</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/pdf_toolkit.css' %}">
+    <link rel="stylesheet" href="{% static 'css/navbar.css' %}">
+    <link rel="stylesheet" href="{% static 'css/footer.css' %}">
+</head>
+<body>
+    {% include 'partials/navbar.html' %}
+
+    <main>
+        <header class="page-header">
+            <div class="pdf-symbol" aria-hidden="true"><span>PDF</span></div>
+            <div><span class="kicker">Document utility</span><h1>PDF Toolkit</h1><p>Simple PDF tasks, processed securely on your server.</p></div>
+        </header>
+
+        {% if error %}<div class="alert" role="alert"><strong>Couldn’t process that file.</strong> {{ error }}</div>{% endif %}
+
+        <div class="tool-tabs" role="tablist">
+            <button class="tab active" data-target="merge" type="button">Merge PDFs</button>
+            <button class="tab" data-target="split" type="button">Split PDF</button>
+            <button class="tab" data-target="inspect" type="button">Inspect PDF</button>
+        </div>
+
+        <section class="tool-panel active" id="merge">
+            <div class="panel-copy"><span class="step">01</span><h2>Merge PDF files</h2><p>Combine two or more documents in the order you select them.</p></div>
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}<input type="hidden" name="action" value="merge">
+                <label class="drop-zone" for="merge-files">
+                    <span class="upload-icon">&#8593;</span><strong>Choose PDF files</strong><small>Select at least two files · no application size limit</small>
+                    <input id="merge-files" name="pdf_files" type="file" accept="application/pdf,.pdf" multiple required>
+                    <span class="file-summary">No files selected</span>
+                </label>
+                <button class="action-button" type="submit">Merge and download <span>&#8594;</span></button>
+            </form>
+        </section>
+
+        <section class="tool-panel" id="split">
+            <div class="panel-copy"><span class="step">02</span><h2>Split PDF by page ranges</h2><p>Extract one range, or create multiple PDFs from ranges you provide.</p></div>
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}<input type="hidden" name="action" value="split">
+                <label class="drop-zone compact" for="split-file"><span class="upload-icon">&#8593;</span><strong>Choose one PDF</strong><small>Any document size</small><input id="split-file" name="pdf_file" type="file" accept="application/pdf,.pdf" required><span class="file-summary">No file selected</span></label>
+                <div class="range-fields"><label>Start page<input name="start_page" type="number" min="1" value="1"></label><label>End page<input name="end_page" type="number" min="1" placeholder="e.g. 5"></label></div>
+                <label>Multiple ranges (optional)<input name="split_ranges" type="text" placeholder="e.g. 1-3, 4-6, 8"><small>Each range becomes a separate PDF inside one ZIP file. This overrides start and end page.</small></label>
+                <button class="action-button" type="submit">Split and download <span>&#8594;</span></button>
+            </form>
+        </section>
+
+        <section class="tool-panel" id="inspect">
+            <div class="panel-copy"><span class="step">03</span><h2>Inspect document details</h2><p>View page count, dimensions, metadata, and encryption status.</p></div>
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}<input type="hidden" name="action" value="inspect">
+                <label class="drop-zone compact" for="inspect-file"><span class="upload-icon">&#8593;</span><strong>Choose one PDF</strong><small>Any document size</small><input id="inspect-file" name="pdf_file" type="file" accept="application/pdf,.pdf" required><span class="file-summary">No file selected</span></label>
+                <button class="action-button" type="submit">Inspect document <span>&#8594;</span></button>
+            </form>
+            {% if details %}
+            <div class="details-grid">
+                <div><span>File</span><strong>{{ details.name }}</strong></div><div><span>Size</span><strong>{{ details.size }}</strong></div>
+                <div><span>Pages</span><strong>{{ details.pages }}</strong></div><div><span>Encrypted</span><strong>{{ details.encrypted }}</strong></div>
+                <div><span>Title</span><strong>{{ details.title }}</strong></div><div><span>Author</span><strong>{{ details.author }}</strong></div>
+                <div><span>First page size</span><strong>{{ details.page_size }}</strong></div>
+            </div>
+            {% endif %}
+        </section>
+
+        <section class="visual-editor">
+            <div class="section-title"><span class="kicker">Visual page workspace</span><h2>See the pages before you change them</h2><p>Select an action, upload a PDF, then work directly with its page previews.</p></div>
+            <div class="editor-shell">
+                <div class="editor-toolbar">
+                    <div class="mode-switcher" role="tablist" aria-label="Page operation">
+                        <button type="button" class="mode active" data-mode="remove">Remove</button>
+                        <button type="button" class="mode" data-mode="extract">Extract</button>
+                        <button type="button" class="mode" data-mode="organize">Organize</button>
+                        <button type="button" class="mode" data-mode="rotate">Rotate</button>
+                    </div>
+                    <label class="preview-upload">Choose PDF<input id="visual-pdf" type="file" accept="application/pdf,.pdf"></label>
+                </div>
+                <div class="editor-guidance" id="editor-guidance"><strong>Remove pages</strong><span>Select every page you want to delete.</span></div>
+                <div class="preview-state" id="preview-state">
+                    <span class="preview-art" aria-hidden="true">&#9638;</span><strong>Upload a PDF to preview its pages</strong><small>No application-level page or file-size limit</small>
+                </div>
+                <div class="page-grid" id="page-grid" aria-live="polite"></div>
+                <form id="visual-form" method="post" enctype="multipart/form-data">
+                    {% csrf_token %}<input id="visual-action" type="hidden" name="action" value="remove"><input id="visual-pages" type="hidden" name="pages"><input id="visual-rotations" type="hidden" name="rotations">
+                </form>
+                <div class="editor-footer" hidden id="editor-footer"><span id="selection-count">0 pages selected</span><button id="process-visual" type="button">Remove selected pages <span>&#8594;</span></button></div>
+            </div>
+        </section>
+
+        <section class="more-tools">
+            <div class="section-title"><span class="kicker">More local tools</span><h2>Organize, edit, and secure</h2><p>Each operation runs locally on this server and returns a fresh PDF download.</p></div>
+            <div class="utility-grid">
+                <form class="utility-card" method="post" enctype="multipart/form-data">{% csrf_token %}<input type="hidden" name="action" value="compress"><span class="utility-icon">&#8693;</span><h3>Compress PDF</h3><p>Optimize and compress content streams.</p><input name="pdf_file" type="file" accept=".pdf" required><button>Compress & download</button></form>
+                <form class="utility-card" method="post" enctype="multipart/form-data">{% csrf_token %}<input type="hidden" name="action" value="watermark"><span class="utility-icon">W</span><h3>Add watermark</h3><p>Stamp diagonal text across every page.</p><input name="pdf_file" type="file" accept=".pdf" required><input name="watermark_text" maxlength="80" placeholder="Watermark text" required><button>Watermark & download</button></form>
+                <form class="utility-card" method="post" enctype="multipart/form-data">{% csrf_token %}<input type="hidden" name="action" value="number"><span class="utility-icon">#</span><h3>Page numbers</h3><p>Add centered numbers to every page.</p><input name="pdf_file" type="file" accept=".pdf" required><button>Number & download</button></form>
+                <form class="utility-card" method="post" enctype="multipart/form-data">{% csrf_token %}<input type="hidden" name="action" value="protect"><span class="utility-icon">&#128274;</span><h3>Protect PDF</h3><p>Encrypt a PDF with a password.</p><input name="pdf_file" type="file" accept=".pdf" required><input name="new_password" type="password" minlength="6" placeholder="New password" required><button>Protect & download</button></form>
+                <form class="utility-card" method="post" enctype="multipart/form-data">{% csrf_token %}<input type="hidden" name="action" value="unlock"><span class="utility-icon">&#128275;</span><h3>Unlock PDF</h3><p>Remove encryption using its password.</p><input name="pdf_file" type="file" accept=".pdf" required><input name="current_password" type="password" placeholder="Current password" required><button>Unlock & download</button></form>
+                <form class="utility-card" method="post" enctype="multipart/form-data">{% csrf_token %}<input type="hidden" name="action" value="image_to_pdf"><span class="utility-icon">&#9635;</span><h3>Images to PDF</h3><p>Combine JPG and PNG images into a PDF.</p><input name="image_files" type="file" accept=".jpg,.jpeg,.png" multiple required><button>Convert & download</button></form>
+            </div>
+        </section>
+
+        <section class="utility-section grouped-tools"><div class="section-heading"><span class="kicker">More PDF tools</span><h2>Extract and sign</h2><p>PDF-specific advanced operations live here with the rest of your document workflow.</p></div><div class="utility-grid"><form class="utility-card" method="post" enctype="multipart/form-data" action="{% url 'advanced_toolkit' %}">{% csrf_token %}<input type="hidden" name="action" value="ocr"><span class="utility-icon">Aa</span><h3>Extract PDF text</h3><p>Extract embedded text from every PDF page.</p><input name="file" type="file" accept=".pdf" required><button>Extract text</button></form><form class="utility-card" method="post" enctype="multipart/form-data" action="{% url 'advanced_toolkit' %}">{% csrf_token %}<input type="hidden" name="action" value="sign"><span class="utility-icon">✎</span><h3>Sign PDF</h3><p>Place an uploaded signature on a selected page.</p><input name="file" type="file" accept=".pdf" required><input name="signature" type="file" accept="image/*" required><div class="range-fields"><label>Page<input name="page" type="number" min="1" value="1"></label><label>Width<input name="width" type="number" min="20" value="160"></label></div><input name="x" type="hidden" value="72"><input name="y" type="hidden" value="650"><button>Sign & download</button></form></div></section>
+    </main>
+    {{ active_tool|default:"merge"|json_script:"active-tool" }}
+    <script>
+        const panels = document.querySelectorAll('.tool-panel');
+        const tabs = document.querySelectorAll('.tab');
+        function activate(id) {
+            panels.forEach(panel => panel.classList.toggle('active', panel.id === id));
+            tabs.forEach(tab => tab.classList.toggle('active', tab.dataset.target === id));
+        }
+        tabs.forEach(tab => tab.addEventListener('click', () => activate(tab.dataset.target)));
+        document.querySelectorAll('input[type=file]').forEach(input => input.addEventListener('change', () => {
+            const count = input.files.length;
+            input.closest('.drop-zone').querySelector('.file-summary').textContent = count ? (count === 1 ? input.files[0].name : `${count} files selected`) : 'No files selected';
+            input.closest('.drop-zone').classList.toggle('has-file', count > 0);
+        }));
+        activate(JSON.parse(document.getElementById('active-tool').textContent));
+
+        const visualInput = document.getElementById('visual-pdf');
+        const pageGrid = document.getElementById('page-grid');
+        const previewState = document.getElementById('preview-state');
+        const editorFooter = document.getElementById('editor-footer');
+        const guidance = document.getElementById('editor-guidance');
+        const visualForm = document.getElementById('visual-form');
+        let visualMode = 'remove';
+        let pageData = [];
+        let selectedPages = new Set();
+        let draggedCard = null;
+        const copy = {
+            remove: ['Remove pages', 'Select every page you want to delete.', 'Remove selected pages'],
+            extract: ['Extract pages', 'Select pages to combine into a new PDF.', 'Extract selected pages'],
+            organize: ['Organize pages', 'Drag and drop page previews into the order you want.', 'Save new page order'],
+            rotate: ['Rotate pages', 'Use the rotate button on each page that needs turning.', 'Apply page rotations']
+        };
+
+        document.querySelectorAll('.mode').forEach(button => button.addEventListener('click', () => {
+            visualMode = button.dataset.mode;
+            document.querySelectorAll('.mode').forEach(item => item.classList.toggle('active', item === button));
+            selectedPages.clear();
+            guidance.innerHTML = `<strong>${copy[visualMode][0]}</strong><span>${copy[visualMode][1]}</span>`;
+            document.getElementById('process-visual').childNodes[0].textContent = copy[visualMode][2] + ' ';
+            renderPages();
+        }));
+
+        visualInput.addEventListener('change', async () => {
+            if (!visualInput.files.length) return;
+            previewState.hidden = false;
+            previewState.classList.add('loading');
+            previewState.innerHTML = '<span class="loader"></span><strong>Rendering page previews…</strong><small>This stays on your server</small>';
+            pageGrid.innerHTML = '';
+            editorFooter.hidden = true;
+            const payload = new FormData();
+            payload.append('pdf_file', visualInput.files[0]);
+            payload.append('csrfmiddlewaretoken', visualForm.querySelector('[name=csrfmiddlewaretoken]').value);
+            try {
+                const response = await fetch('{% url "pdf_preview" %}', {method: 'POST', body: payload});
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.error || 'Preview failed.');
+                pageData = result.pages.map(page => ({...page, rotation: 0}));
+                selectedPages.clear();
+                previewState.hidden = true;
+                editorFooter.hidden = false;
+                renderPages();
+            } catch (error) {
+                previewState.classList.remove('loading');
+                previewState.innerHTML = `<span class="preview-error">!</span><strong>Couldn’t preview this PDF</strong><small>${error.message}</small>`;
+            }
+        });
+
+        function renderPages() {
+            pageGrid.innerHTML = '';
+            pageData.forEach(page => {
+                const card = document.createElement('article');
+                card.className = 'page-preview' + (selectedPages.has(page.number) ? ' selected' : '');
+                card.dataset.page = page.number;
+                card.draggable = visualMode === 'organize';
+                card.innerHTML = `<div class="page-image"><img src="${page.thumbnail}" alt="Preview of page ${page.number}" style="transform:rotate(${page.rotation}deg)"><span class="selected-mark">✓</span><button class="rotate-page" type="button" aria-label="Rotate page ${page.number}">↻</button></div><div class="page-meta"><span class="drag-handle">${visualMode === 'organize' ? '⠿' : ''}</span><strong>Page ${page.number}</strong><small>${page.rotation ? page.rotation + '°' : ''}</small></div>`;
+                card.addEventListener('click', event => {
+                    if (event.target.closest('.rotate-page') || visualMode === 'organize' || visualMode === 'rotate') return;
+                    selectedPages.has(page.number) ? selectedPages.delete(page.number) : selectedPages.add(page.number);
+                    renderPages();
+                });
+                card.querySelector('.rotate-page').addEventListener('click', event => {
+                    event.stopPropagation();
+                    page.rotation = (page.rotation + 90) % 360;
+                    renderPages();
+                });
+                card.addEventListener('dragstart', () => { draggedCard = card; card.classList.add('dragging'); });
+                card.addEventListener('dragend', () => { card.classList.remove('dragging'); draggedCard = null; syncOrder(); });
+                card.addEventListener('dragover', event => { event.preventDefault(); if (draggedCard && draggedCard !== card) { const box = card.getBoundingClientRect(); pageGrid.insertBefore(draggedCard, event.clientX < box.left + box.width / 2 ? card : card.nextSibling); } });
+                pageGrid.appendChild(card);
+            });
+            const changedRotations = pageData.filter(page => page.rotation).length;
+            document.getElementById('selection-count').textContent = visualMode === 'organize' ? `${pageData.length} pages · drag to reorder` : visualMode === 'rotate' ? `${changedRotations} pages rotated` : `${selectedPages.size} pages selected`;
+        }
+
+        function syncOrder() {
+            const order = [...pageGrid.children].map(card => Number(card.dataset.page));
+            pageData = order.map(number => pageData.find(page => page.number === number));
+            renderPages();
+        }
+
+        document.getElementById('process-visual').addEventListener('click', () => {
+            if (!visualInput.files.length) return;
+            if ((visualMode === 'remove' || visualMode === 'extract') && !selectedPages.size) return alert('Select at least one page first.');
+            if (visualMode === 'rotate' && !pageData.some(page => page.rotation)) return alert('Rotate at least one page first.');
+            const transferred = new DataTransfer();
+            transferred.items.add(visualInput.files[0]);
+            let hiddenFile = visualForm.querySelector('input[name=pdf_file]');
+            if (!hiddenFile) { hiddenFile = document.createElement('input'); hiddenFile.type = 'file'; hiddenFile.name = 'pdf_file'; hiddenFile.hidden = true; visualForm.appendChild(hiddenFile); }
+            hiddenFile.files = transferred.files;
+            document.getElementById('visual-action').value = visualMode;
+            document.getElementById('visual-pages').value = visualMode === 'organize' ? pageData.map(page => page.number).join(',') : [...selectedPages].sort((a,b) => a-b).join(',');
+            document.getElementById('visual-rotations').value = JSON.stringify(Object.fromEntries(pageData.filter(page => page.rotation).map(page => [page.number, page.rotation])));
+            visualForm.submit();
+        });
+    </script>
+    <footer class="site-footer"><strong>Necessary Tools</strong><span>&copy; 2026. Built for what matters.</span></footer>
+</body>
+</html>

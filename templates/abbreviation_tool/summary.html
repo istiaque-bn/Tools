@@ -1,0 +1,33 @@
+{% extends 'tool_base.html' %}{% block title %}DOCX Ready{% endblock %}{% block heading %}Your DOCX is ready{% endblock %}{% block intro %}Only accepted and manually edited suggestions were applied to a fresh copy of the original package.{% endblock %}{% block content %}<section class="session-card">
+<dl>
+<div>
+<dt>Document</dt>
+<dd>{{ processing_session.original_filename }}</dd>
+</div>
+<div>
+<dt>Accepted</dt>
+<dd>{{ processing_session.accepted_count }}</dd>
+</div>
+<div>
+<dt>Rejected</dt>
+<dd>{{ processing_session.rejected_count }}</dd>
+</div>
+<div>
+<dt>Status</dt>
+<dd>{{ processing_session.get_status_display }}</dd>
+</div>
+<div>
+<dt>Completed</dt>
+<dd>{{ processing_session.completed_at }}</dd>
+</div>
+<div>
+<dt>Download</dt>
+<dd>One-time</dd>
+</div>
+</dl>
+<p>The temporary original, processed file, preview context, and suggestions are deleted after the download response closes.</p>
+{% if processing_session.processing_options.glossary_mode == 'separate' or processing_session.processing_options.glossary_mode == 'preview' %}<a class="download-action btn-secondary" href="{% url 'abbreviation_tool:glossary_download' processing_session.id %}">Download glossary</a>{% endif %}
+<a class="download-action" href="{% url 'abbreviation_tool:download' processing_session.id %}">Download processed DOCX</a>
+<form method="post" action="{% url 'abbreviation_tool:cancel' processing_session.id %}">{% csrf_token %}<button type="submit" class="btn-danger">Cancel and delete without downloading</button>
+</form>
+</section>{% endblock %}

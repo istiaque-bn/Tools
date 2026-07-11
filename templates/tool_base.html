@@ -1,0 +1,42 @@
+{% load static %}<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Toolkit{% endblock %} | Necessary Tools</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
+    <link rel="stylesheet" href="{% static 'css/tool_hub.css' %}">
+    <link rel="stylesheet" href="{% static 'css/navbar.css' %}">
+    <link rel="stylesheet" href="{% static 'css/footer.css' %}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <a class="skip-link" href="#main-content">Skip to content</a>
+
+    {% include 'partials/navbar.html' %}
+
+    <main id="main-content">
+        <header class="page-header">
+            <span class="kicker">Everyday utility</span>
+            <h1>{% block heading %}{% endblock %}</h1>
+            <p>{% block intro %}{% endblock %}</p>
+        </header>
+        {% if error %}<div class="alert" role="alert">{{ error }}</div>{% endif %}
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="site-footer"><strong>Necessary Tools</strong><span>&copy; 2026. Built for what matters.</span></footer>
+
+    <script>
+        document.querySelectorAll('form').forEach(f => f.addEventListener('submit', () => {
+            const b = f.querySelector('button[type=submit]');
+            if (b) { b.dataset.label = b.textContent; b.textContent = 'Processing…'; b.disabled = true; }
+        }));
+
+    </script>
+    {% block script %}{% endblock %}
+</body>
+</html>

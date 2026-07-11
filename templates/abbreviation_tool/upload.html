@@ -1,0 +1,19 @@
+{% extends 'tool_base.html' %}{% block title %}Upload DOCX{% endblock %}{% block heading %}Start a document session{% endblock %}{% block intro %}Only valid, non-encrypted DOCX packages are accepted. Files expire automatically.{% endblock %}{% block content %}<form method="post" enctype="multipart/form-data" class="docx-upload">{% csrf_token %}{% if form.non_field_errors %}<div class="alert">{{ form.non_field_errors }}</div>{% endif %}<fieldset>
+{% if limit_error %}<div class="alert">{{ limit_error }}</div>{% endif %}
+<legend>Operation</legend>{{ form.operation_type }}{{ form.operation_type.errors }}</fieldset>
+<label>Processing profile{{ form.profile }}{{ form.profile.errors }}</label>
+<label>Replacement policy{{ form.replacement_policy }}</label>
+<fieldset>
+<legend>Content options</legend>
+<label>{{ form.include_tables }} Include tables</label>
+<label>{{ form.include_headers_footers }} Include headers and footers</label>
+<label>{{ form.include_footnotes_endnotes }} Include footnotes and endnotes</label>
+<label>{{ form.case_sensitive }} Require exact database case</label>
+<label>{{ form.high_confidence_only }} Show only high-confidence suggestions</label>
+</fieldset>
+<label>Glossary option{{ form.glossary_mode }}</label>
+<label>Glossary bookmark{{ form.glossary_bookmark }}{{ form.glossary_bookmark.errors }}</label>
+<label>DOCX document{{ form.pdf_file }}{{ form.pdf_file.errors }}</label>
+<p class="upload-rules">DOCX only · maximum 25 MB · no macros, encryption, external relationships, or embedded executables</p>
+<button type="submit">Validate and create session</button>
+</form>{% endblock %}{% block script %}<script>const requested=new URLSearchParams(location.search).get('mode'),choice=document.querySelector(`[name=operation_type][value="${requested}"]`);if(choice)choice.checked=true;</script>{% endblock %}

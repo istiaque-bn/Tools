@@ -1,0 +1,53 @@
+/* Shared design tokens for the Tier B tool pages (tool_base.html + tool_hub.css).
+   Values are matched to the existing home/login/pdf/image toolkit palette so
+   every page in the app reads as one product. */
+:root {
+    --color-bg: #06183d;
+    --color-bg-deep: #030c20;
+    --color-panel: #0a2049;
+    --color-panel-soft: rgba(10, 34, 79, .55);
+    --color-surface: #071a40;
+    --color-text: #f6f9ff;
+    --color-muted: #93a5c7;
+    --color-border: rgba(126, 160, 222, .18);
+    --color-border-strong: rgba(126, 160, 222, .32);
+
+    --color-accent: #397cf4;
+    --color-accent-strong: #2867e8;
+    --color-accent-soft: rgba(57, 124, 244, .15);
+    --color-cyan: #59ddf6;
+
+    --color-success: #4fc783;
+    --color-success-soft: rgba(58, 190, 151, .14);
+    --color-warning: #e8b64f;
+    --color-warning-soft: rgba(232, 182, 79, .14);
+    --color-danger: #e56b76;
+    --color-danger-soft: rgba(137, 24, 48, .24);
+    --color-info: #59ddf6;
+    --color-info-soft: rgba(57, 176, 244, .14);
+
+    --font-sans: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 24px;
+    --space-6: 32px;
+    --space-7: 48px;
+    --space-8: 64px;
+
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 18px;
+    --radius-xl: 22px;
+    --radius-pill: 999px;
+
+    --shadow-sm: 0 4px 14px rgba(0, 5, 20, .18);
+    --shadow-md: 0 14px 34px rgba(0, 5, 20, .28);
+    --shadow-lg: 0 28px 70px rgba(0, 5, 20, .32);
+
+    --focus-ring: 0 0 0 3px rgba(57, 124, 244, .45);
+    --transition: .18s ease;
+    --header-height: 70px;
+}

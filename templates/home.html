@@ -1,0 +1,72 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Necessary Tools — one intelligent workspace for your essential tools.">
+    <title>Necessary Tools | Your workspace, reimagined</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/home.css' %}">
+    <link rel="stylesheet" href="{% static 'css/navbar.css' %}">
+    <link rel="stylesheet" href="{% static 'css/footer.css' %}">
+</head>
+<body>
+    {% include 'partials/navbar.html' %}
+
+    <main>
+        <section class="hero">
+            <div class="grid-overlay" aria-hidden="true"></div>
+            <div class="orb orb-one" aria-hidden="true"></div>
+            <div class="orb orb-two" aria-hidden="true"></div>
+            <div class="hero-copy">
+                <div class="status"><span></span> Your workspace is online</div>
+                <h1>Every tool.<br><em>One intelligent space.</em></h1>
+                <p>Bring your everyday essentials into a faster, smarter workspace designed to keep everything within reach.</p>
+                <div class="hero-actions">
+                    <a class="primary-action" href="#tools">Explore your tools <span aria-hidden="true">&#8594;</span></a>
+                    <a class="secondary-action" href="{% url 'advanced_toolkit' %}"><span class="play" aria-hidden="true">&#9654;</span> Advanced tools</a>
+                </div>
+                <div class="trust-row">
+                    <span><i aria-hidden="true">&#10003;</i> Secure access</span>
+                    <span><i aria-hidden="true">&#10003;</i> One dashboard</span>
+                    <span><i aria-hidden="true">&#10003;</i> Built to grow</span>
+                </div>
+            </div>
+            <a class="scroll-hint" href="#tools" aria-label="Scroll to tools"><span></span> Discover</a>
+        </section>
+
+        <section class="tools-section" id="tools">
+            <div class="section-heading">
+                <span class="kicker">Your collection</span>
+                <h2>Useful tools, coming together.</h2>
+                <p>This workspace is ready for every tool you add next.</p>
+            </div>
+            <div class="workspace-controls"><input id="tool-search" type="search" placeholder="Search your tools…" aria-label="Search tools"></div>
+            <div class="tool-grid" id="tool-grid">
+                <a class="tool-card featured" href="{% url 'pdf_toolkit' %}">
+                    <div class="tool-icon"><span></span><span></span><span></span></div>
+                    <div><small>Documents</small><h3>PDF Toolkit</h3><p>Merge, split, and inspect your PDF documents.</p></div>
+                    <span class="coming">Open tool &#8594;</span>
+                </a>
+                <a class="tool-card placeholder" href="{% url 'image_toolkit' %}">
+                    <div class="plus">&#9635;</div><h3>Image Toolkit</h3><p>Resize, crop, convert, compress, and edit images.</p>
+                </a>
+                <a class="tool-card placeholder" href="{% url 'advanced_toolkit' %}">
+                    <div class="plus">＋</div><h3>Advanced Tools</h3><p>QR codes, text and developer utilities, archives, screenshot cards, and API access.</p>
+                </a>
+                {% if docx_abbreviation_tool_enabled and perms.abbreviation_tool.access_abbreviation_tool %}<a class="tool-card placeholder" href="{% url 'abbreviation_tool:landing' %}"><div class="plus">SD</div><h3>SD Checker</h3><p>Convert pasted text or upload a DOCX using approved service abbreviations.</p></a>{% endif %}
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="site-footer"><strong>Necessary Tools</strong><span>&copy; 2026. Built for what matters.</span></footer>
+</body>
+<script>
+const search=document.getElementById('tool-search'),cards=[...document.querySelectorAll('.tool-card')];
+search.oninput=()=>cards.forEach(c=>c.hidden=!c.textContent.toLowerCase().includes(search.value.toLowerCase()));
+</script>
+</html>

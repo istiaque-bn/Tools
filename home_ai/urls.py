@@ -1,0 +1,39 @@
+"""
+URL configuration for home_ai project.
+
+The `urlpatterns` list routes URLs to views. For more information please see:
+    https://docs.djangoproject.com/en/6.0/topics/http/urls/
+Examples:
+Function views
+    1. Add an import:  from my_app import views
+    2. Add a URL to urlpatterns:  path('', views.home, name='home')
+Class-based views
+    1. Add an import:  from other_app.views import Home
+    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
+Including another URLconf
+    1. Import the include() function: from django.urls import include, path
+    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
+"""
+from django.contrib import admin
+from django.urls import include, path
+
+from . import views
+from . import views_extra
+
+urlpatterns = [
+    path('', views.home_view, name='home'),
+    path('login/', views.login_view, name='login'),
+    path('logout/', views.logout_view, name='logout'),
+    path('tools/pdf/', views.pdf_toolkit_view, name='pdf_toolkit'),
+    path('tools/pdf/preview/', views.pdf_preview_view, name='pdf_preview'),
+    path('tools/images/', views.image_toolkit_view, name='image_toolkit'),
+    path('tools/qr/', views_extra.qr_toolkit, name='qr_toolkit'),
+    path('tools/text/', views_extra.text_toolkit, name='text_toolkit'),
+    path('tools/images/batch/', views_extra.batch_images, name='batch_images'),
+    path('tools/archive/', views_extra.archive_toolkit, name='archive_toolkit'),
+    path('tools/advanced/', views_extra.advanced_toolkit, name='advanced_toolkit'),
+    path('tools/jssdm/', include('jssdm.urls')),
+    path('tools/docx-abbreviations/', include('abbreviation_tool.urls')),
+    path('api/v1/tools/text/', views_extra.tools_api, name='tools_api'),
+    path('admin/', admin.site.urls),
+]

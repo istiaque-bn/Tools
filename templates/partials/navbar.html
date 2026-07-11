@@ -1,0 +1,22 @@
+<nav class="site-navbar" aria-label="Main navigation">
+    <a class="site-brand" href="{% url 'home' %}" aria-label="Necessary Tools home">
+        <span class="site-brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+        <span>Necessary <strong>Tools</strong></span>
+    </a>
+    {% if request.user.is_authenticated %}
+    <div class="site-nav-links">
+        <a href="{% url 'home' %}#tools">Tools</a>
+        <a href="{% url 'pdf_toolkit' %}">PDF</a>
+        <a href="{% url 'image_toolkit' %}">Images</a>
+        {% if docx_abbreviation_tool_enabled and perms.abbreviation_tool.access_abbreviation_tool %}<a href="{% url 'abbreviation_tool:landing' %}">SD Checker</a>{% endif %}
+        <a href="{% url 'advanced_toolkit' %}">Advanced</a>
+    </div>
+    <div class="site-account">
+        <span class="site-avatar" aria-hidden="true">{{ request.user.username|first|upper }}</span>
+        <span class="site-username">{{ request.user.username }}</span>
+        <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit">Sign out</button></form>
+    </div>
+    {% else %}
+    <span class="site-nav-note">Everything you need, in one place.</span>
+    {% endif %}
+</nav>
