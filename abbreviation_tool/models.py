@@ -204,3 +204,19 @@ class AbbreviationAuditLog(models.Model):
 
     class Meta:
         ordering = ("-timestamp",)
+
+
+class Feedback(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, on_delete=models.SET_NULL, related_name="abbreviation_feedback")
+    name = models.CharField(max_length=150)
+    email = models.EmailField(blank=True)
+    message = models.TextField(max_length=4000)
+    resolved = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ("-created_at",)
+        verbose_name_plural = "feedback"
+
+    def __str__(self):
+        return f"Feedback from {self.name}"

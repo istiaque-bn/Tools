@@ -99,7 +99,12 @@ def find_matches(container, candidates, operation, policy=POLICY_DEFINE_FIRST, s
             identity = entry.normalized_full_form
             ambiguous = len(meanings.get(entry.normalized_abbreviation, ())) > 1 or entry.is_ambiguous
             if operation == DocumentProcessingSession.Operation.ABBREVIATE:
-                first = identity not in seen
+                definition = re.compile(
+                    rf"(?<![\w]){re.escape(entry.full_form)}\s*\(\s*{re.escape(entry.abbreviation)}\s*\)",
+                    0 if entry.case_sensitive else re.I,
+                )
+                already_defined = any(match.end() <= start for match in definition.finditer(container.text))
+                first = identity not in seen and not already_defined
                 if policy == POLICY_KEEP_FIRST and first:
                     seen.add(identity)
                     occupied.append((start, end))

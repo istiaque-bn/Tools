@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import AbbreviationEntry
+from .models import AbbreviationEntry, Feedback
 from .models import AbbreviationProfile, DocumentProcessingSession
 
 
@@ -9,6 +9,49 @@ class DictionarySearchForm(forms.Form):
     service = forms.CharField(required=False, max_length=50)
     status = forms.ChoiceField(required=False, choices=(("", "All statuses"), *AbbreviationEntry.Status.choices))
     ambiguous = forms.NullBooleanField(required=False)
+
+
+class AbbreviationEntryForm(forms.ModelForm):
+    class Meta:
+        model = AbbreviationEntry
+        fields = ("abbreviation", "full_form")
+        help_texts = {"full_form": "For multiple meanings, add each full form as a separate entry using the same abbreviation."}
+
+    def clean_full_form(self):
+        full_form = self.cleaned_data["full_form"]
+        if " / " in full_form:
+            raise forms.ValidationError("Add each meaning as a separate entry instead of separating full forms with '/'.")
+        return full_form
+
+    def clean(self):
+        cleaned = super().clean()
+        short = AbbreviationEntry.normalize(cleaned.get("abbreviation", ""))
+        full = AbbreviationEntry.normalize(cleaned.get("full_form", ""))
+        duplicate = AbbreviationEntry.objects.filter(normalized_abbreviation=short, normalized_full_form=full)
+        if self.instance.pk:
+            duplicate = duplicate.exclude(pk=self.instance.pk)
+        if short and full and duplicate.exists():
+            raise forms.ValidationError("This abbreviation and full-form pair already exists.")
+        return cleaned
+
+
+class DictionaryImportForm(forms.Form):
+    file = forms.FileField(help_text="CSV or XLSX with abbreviation and full_form columns (maximum 2 MB).")
+
+    def clean_file(self):
+        upload = self.cleaned_data["file"]
+        if upload.size > 2 * 1024 * 1024:
+            raise forms.ValidationError("The import file must be 2 MB or smaller.")
+        if not upload.name.lower().endswith((".csv", ".xlsx")):
+            raise forms.ValidationError("Upload a CSV or XLSX file.")
+        return upload
+
+
+class FeedbackForm(forms.ModelForm):
+    class Meta:
+        model = Feedback
+        fields = ("name", "email", "message")
+        widgets = {"message": forms.Textarea(attrs={"rows": 5})}
 
 
 class DocumentUploadForm(forms.Form):

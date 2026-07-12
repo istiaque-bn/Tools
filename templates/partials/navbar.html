@@ -9,6 +9,8 @@
         <a href="{% url 'pdf_toolkit' %}">PDF</a>
         <a href="{% url 'image_toolkit' %}">Images</a>
         {% if docx_abbreviation_tool_enabled and perms.abbreviation_tool.access_abbreviation_tool %}<a href="{% url 'abbreviation_tool:landing' %}">SD Checker</a>{% endif %}
+        {% if docx_abbreviation_tool_enabled %}<a href="{% url 'abbreviation_tool:feedback' %}">Feedback</a>{% endif %}
+        {% if request.user.is_staff and docx_abbreviation_tool_enabled %}<a href="{% url 'abbreviation_tool:manage_dictionary' %}">Manage</a>{% endif %}
         <a href="{% url 'advanced_toolkit' %}">Advanced</a>
     </div>
     <div class="site-account">
@@ -20,3 +22,4 @@
     <span class="site-nav-note">Everything you need, in one place.</span>
     {% endif %}
 </nav>
+<style>.site-brand{font-size:18px}.site-nav-links a,.site-account{font-size:14px}.icon-action.danger-button{border:1px solid #ffffff24;color:#91b8fa;background:#3263b52b}.icon-action.danger-button:hover{color:#fff;background:#3263b566}</style>

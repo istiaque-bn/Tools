@@ -7,6 +7,7 @@ from .models import (
     AbbreviationProfile,
     AbbreviationVariant,
     DocumentProcessingSession,
+    Feedback,
 )
 
 
@@ -86,3 +87,11 @@ class SessionAdmin(admin.ModelAdmin):
 
     def has_add_permission(self, request):
         return False
+
+
+@admin.register(Feedback)
+class FeedbackAdmin(admin.ModelAdmin):
+    list_display = ("name", "email", "user", "resolved", "created_at")
+    list_filter = ("resolved", "created_at")
+    search_fields = ("name", "email", "message")
+    readonly_fields = ("user", "name", "email", "message", "created_at")

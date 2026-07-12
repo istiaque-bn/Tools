@@ -1,0 +1,5 @@
+{% extends 'tool_base.html' %}
+{% block title %}Feedback{% endblock %}
+{% block heading %}Send feedback{% endblock %}
+{% block intro %}Report an incorrect abbreviation or tell the administrator how the tool can improve.{% endblock %}
+{% block content %}<section class="tool-panel"><form method="post">{% csrf_token %}{{ form.as_p }}<button type="submit">Send feedback</button></form></section>{% endblock %}
