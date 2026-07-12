@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'accounts',
     'abbreviation_tool',
     'jssdm',
 ]
@@ -122,9 +123,9 @@ STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 
 LOGIN_REDIRECT_URL = '/'
+LOGIN_URL = '/login/'
 
 DOCX_ABBREVIATION_TOOL_ENABLED = os.getenv("DOCX_ABBREVIATION_TOOL_ENABLED", "true").lower() in {"1", "true", "yes", "on"}
-DOCX_ABBREVIATION_MAX_UPLOAD_MB = int(os.getenv("DOCX_ABBREVIATION_MAX_UPLOAD_MB", "25"))
 DOCX_ABBREVIATION_SESSION_TTL_MINUTES = int(os.getenv("DOCX_ABBREVIATION_SESSION_TTL_MINUTES", "30"))
 DOCX_ABBREVIATION_TEMP_ROOT = os.getenv("DOCX_ABBREVIATION_TEMP_ROOT", str(BASE_DIR / ".private_docx_sessions"))
 DOCX_ABBREVIATION_MAX_UNCOMPRESSED_MB = int(os.getenv("DOCX_ABBREVIATION_MAX_UNCOMPRESSED_MB", "250"))

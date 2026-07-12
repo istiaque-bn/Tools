@@ -1,0 +1,19 @@
+{% with route=request.resolver_match.url_name namespace=request.resolver_match.namespace %}
+<div class="page-tool-icon {% if namespace == 'abbreviation_tool' %}icon-sd{% elif route == 'dictionary_tool' %}icon-dictionary{% elif route == 'text_toolkit' %}icon-text{% elif route == 'qr_toolkit' %}icon-qr{% elif route == 'archive_toolkit' %}icon-archive{% elif route == 'batch_images' %}icon-image{% else %}icon-advanced{% endif %}" aria-hidden="true">
+{% if namespace == 'abbreviation_tool' %}
+<svg viewBox="0 0 64 64"><path fill="#fff" stroke="#2568e8" stroke-width="2" d="M14 4h25l12 12v43H14z"/><path fill="#fff" stroke="#2568e8" stroke-width="2" d="M39 4v12h12"/><path fill="none" stroke="#8390a5" stroke-width="2" stroke-linecap="round" d="M22 25h21M22 31h17"/><rect fill="#2568e8" x="7" y="39" width="38" height="18" rx="3"/><text fill="#fff" font-size="10" font-weight="800" font-family="Arial,sans-serif" text-anchor="middle" x="26" y="52">SD</text></svg>
+{% elif route == 'dictionary_tool' %}
+<svg viewBox="0 0 64 64" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M8 12h19c5 0 7 3 7 7v37c0-5-3-7-8-7H8zM56 12H37c-2 0-3 1-3 3v41c0-5 3-7 8-7h14z"/><path d="M14 23h13M14 30h13M41 23h9M41 30h9"/></svg>
+{% elif route == 'text_toolkit' %}
+<svg viewBox="0 0 64 64"><path fill="#fff" stroke="#23a7b7" stroke-width="2" d="M14 5h27l10 10v44H14z"/><path fill="none" stroke="#23a7b7" stroke-width="2" d="M41 5v10h10"/><path fill="none" stroke="#71849d" stroke-width="2" stroke-linecap="round" d="M22 25h21M22 32h21M22 39h16"/></svg>
+{% elif route == 'qr_toolkit' %}
+<svg viewBox="0 0 64 64" fill="none" stroke="#fff" stroke-width="4"><path d="M8 8h18v18H8zM38 8h18v18H38zM8 38h18v18H8z"/><path d="M40 40h6v6h-6zM50 38v8h6M38 52h8v4M52 52h4v4"/></svg>
+{% elif route == 'archive_toolkit' %}
+<svg viewBox="0 0 64 64" fill="none" stroke="#fff" stroke-width="3" stroke-linejoin="round"><path d="M8 18h48v38H8zM6 9h52v11H6z"/><path d="M25 30h14M29 39h6M29 47h6"/></svg>
+{% elif route == 'batch_images' %}
+<svg viewBox="0 0 64 64" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="10" width="50" height="44" rx="6"/><circle fill="#fff" stroke="none" cx="43" cy="23" r="5"/><path d="m11 48 14-15 10 10 7-7 11 12"/></svg>
+{% else %}
+<svg viewBox="0 0 64 64" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"><path d="M32 8v8M32 48v8M8 32h8M48 32h8M15 15l6 6M43 43l6 6M49 15l-6 6M21 43l-6 6"/><circle cx="32" cy="32" r="13"/><circle fill="#fff" stroke="none" cx="32" cy="32" r="5"/></svg>
+{% endif %}
+</div>
+{% endwith %}

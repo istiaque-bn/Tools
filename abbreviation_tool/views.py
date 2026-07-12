@@ -2,7 +2,7 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required, permission_required
 from django.db import IntegrityError, models, transaction
 from django.db.models import Count, IntegerField, OuterRef, Subquery
-from django.contrib.admin.views.decorators import staff_member_required
+from accounts.decorators import admin_required
 import csv
 import io
 from datetime import timedelta
@@ -16,7 +16,7 @@ from django.http import FileResponse, Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
-from .forms import AbbreviationEntryForm, DictionaryImportForm, DictionarySearchForm, DocumentUploadForm, FeedbackForm, QuickProcessForm
+from .forms import AbbreviationEntryForm, DictionaryImportForm, DictionarySearchForm, DocumentUploadForm, FeedbackForm, PowerPointProcessForm, QuickProcessForm
 from .models import AbbreviationAuditLog, AbbreviationEntry, AbbreviationProfile, DocumentProcessingSession
 from .storage import cleanup_expired, expire_session, save_original
 from .services.analysis import analyse_session
@@ -50,7 +50,7 @@ def landing(request):
     if request.method == "POST" and form.is_valid():
         active_sessions = DocumentProcessingSession.objects.filter(user=request.user, deleted_at__isnull=True, expires_at__gt=timezone.now()).count()
         if active_sessions >= settings.DOCX_ABBREVIATION_MAX_ACTIVE_SESSIONS:
-            return render(request, "abbreviation_tool/landing.html", {"form": form, "error": "Please wait for an existing document session to expire or cancel it."}, status=429)
+            return render(request, "abbreviation_tool/landing.html", {"form": form, "powerpoint_form": PowerPointProcessForm(), "error": "Please wait for an existing document session to expire or cancel it."}, status=429)
         document = form.cleaned_data["docx_file"]
         profile = AbbreviationProfile.objects.filter(name="General", active=True).first() or AbbreviationProfile.objects.filter(active=True).first()
         session = DocumentProcessingSession.objects.create(
@@ -82,15 +82,45 @@ def landing(request):
             return response
         except ValidationError as exc:
             expire_session(session, status=DocumentProcessingSession.Status.FAILED)
-            return render(request, "abbreviation_tool/landing.html", {"form": form, "error": exc.messages[0]}, status=400)
+            return render(request, "abbreviation_tool/landing.html", {"form": form, "powerpoint_form": PowerPointProcessForm(), "error": exc.messages[0]}, status=400)
         except Exception:
             logger.exception("Quick DOCX processing failed", extra={"processing_session_id": str(session.id), "user_id": request.user.id})
             expire_session(session, status=DocumentProcessingSession.Status.FAILED)
-            return render(request, "abbreviation_tool/landing.html", {"form": form, "error": "The document could not be processed. Temporary files were deleted."}, status=400)
+            return render(request, "abbreviation_tool/landing.html", {"form": form, "powerpoint_form": PowerPointProcessForm(), "error": "The document could not be processed. Temporary files were deleted."}, status=400)
     return render(request, "abbreviation_tool/landing.html", {
         "form": form,
+        "powerpoint_form": PowerPointProcessForm(),
         "entry_count": AbbreviationEntry.objects.filter(status=AbbreviationEntry.Status.ACTIVE).count(),
     })
+
+
+@login_required
+@permission_required("abbreviation_tool.process_document", raise_exception=True)
+def powerpoint_convert(request):
+    _require_feature()
+    if request.method != "POST":
+        return redirect("abbreviation_tool:landing")
+    form = PowerPointProcessForm(request.POST, request.FILES)
+    if not form.is_valid():
+        return render(request, "abbreviation_tool/landing.html", {
+            "form": QuickProcessForm(), "powerpoint_form": form,
+            "entry_count": AbbreviationEntry.objects.filter(status=AbbreviationEntry.Status.ACTIVE).count(),
+        }, status=400)
+    profile = AbbreviationProfile.objects.filter(name="General", active=True).first()
+    try:
+        from .services.powerpoint import process_powerpoint
+        output, count = process_powerpoint(form.cleaned_data["presentation_file"], form.cleaned_data["operation_type"], profile)
+    except ValidationError as exc:
+        form.add_error("presentation_file", exc.messages[0])
+        return render(request, "abbreviation_tool/landing.html", {
+            "form": QuickProcessForm(), "powerpoint_form": form,
+            "entry_count": AbbreviationEntry.objects.filter(status=AbbreviationEntry.Status.ACTIVE).count(),
+        }, status=400)
+    source_name = Path(form.cleaned_data["presentation_file"].name).stem
+    response = FileResponse(output, as_attachment=True, filename=f"processed-{source_name}.pptx", content_type="application/vnd.openxmlformats-officedocument.presentationml.presentation")
+    response["X-Replacement-Count"] = str(count)
+    response["X-Content-Type-Options"] = "nosniff"
+    return response
 
 
 @login_required
@@ -106,12 +136,11 @@ def text_convert(request):
         return JsonResponse({"error": "Choose abbreviate or deabbreviate."}, status=400)
     if not text.strip() or len(text) > 50_000:
         return JsonResponse({"error": "Enter between 1 and 50,000 characters."}, status=400)
-    from .services.matching import POLICY_DEFINE_FIRST, candidates_for, find_matches
+    from .services.matching import POLICY_ALL, candidates_for, find_matches
     from .services.ooxml import CharacterLocation, TextContainer
     profile = AbbreviationProfile.objects.filter(name="General", active=True).first()
     container = TextContainer("text", "text:p0", "paragraph", text, [CharacterLocation(0, index, b"") for index in range(len(text))])
-    policy = POLICY_DEFINE_FIRST if operation == DocumentProcessingSession.Operation.ABBREVIATE else DocumentProcessingSession.Policy.ALL
-    matches = find_matches(container, candidates_for(profile, operation), operation, policy)
+    matches = find_matches(container, candidates_for(profile, operation), operation, POLICY_ALL)
     if operation == DocumentProcessingSession.Operation.DEABBREVIATE:
         matches = [match for match in matches if match.ambiguity == "unambiguous"]
     output = text
@@ -139,7 +168,7 @@ def dictionary(request):
     return render(request, "abbreviation_tool/dictionary.html", {"form": form, "entries": entries[:250]})
 
 
-@staff_member_required
+@admin_required
 def manage_dictionary(request, entry_id=None):
     _require_feature()
     entry = get_object_or_404(AbbreviationEntry, pk=entry_id) if entry_id else None
@@ -155,6 +184,9 @@ def manage_dictionary(request, entry_id=None):
         except IntegrityError:
             form.add_error(None, "This abbreviation and full-form pair already exists.")
         else:
+            general_profile = AbbreviationProfile.objects.filter(name="General", active=True).first()
+            if general_profile:
+                saved.profiles.add(general_profile)
             AbbreviationAuditLog.objects.create(abbreviation_entry=saved, action="updated" if entry else "created", previous_value=before, new_value={"abbreviation": saved.abbreviation, "full_form": saved.full_form}, user=request.user)
             messages.success(request, "Abbreviation updated." if entry else "Abbreviation added.")
             return redirect("abbreviation_tool:manage_dictionary")
@@ -178,7 +210,7 @@ def manage_dictionary(request, entry_id=None):
     return render(request, "abbreviation_tool/manage_dictionary.html", {"form": form, "import_form": import_form, "entries": all_entries, "search_results": search_results, "editing": entry, "query": query, "total_entries": total_entries})
 
 
-@staff_member_required
+@admin_required
 def delete_dictionary_entry(request, entry_id):
     _require_feature()
     if request.method != "POST":
@@ -252,6 +284,9 @@ def _import_dictionary_file(upload, user):
             result["errors"].append(f"Row {line}: conflicts with an existing pair.")
             continue
         AbbreviationAuditLog.objects.create(abbreviation_entry=entry, action="import_updated" if existing else "import_created", previous_value=before, new_value={"abbreviation": abbreviation, "full_form": full_form}, user=user)
+        general_profile = AbbreviationProfile.objects.filter(name="General", active=True).first()
+        if general_profile:
+            entry.profiles.add(general_profile)
         result["updated" if existing else "created"] += 1
     return result
 

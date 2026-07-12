@@ -1,0 +1,20 @@
+{% load static %}<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{% block title %}Admin Panel{% endblock %} | Necessary Tools</title><link rel="stylesheet" href="{% static 'css/admin_panel.css' %}">{% block extra_head %}{% endblock %}</head>
+<body class="admin-shell">
+<aside class="admin-sidebar" id="admin-sidebar">
+  <a class="admin-brand" href="{% url 'admin_panel:dashboard' %}"><span>NT</span><strong>Admin Panel</strong></a>
+  <nav aria-label="Admin navigation">
+    <a href="{% url 'admin_panel:dashboard' %}"{% if request.resolver_match.url_name == 'dashboard' or request.resolver_match.url_name == 'dashboard_alias' %} class="active"{% endif %}>Dashboard</a>
+    <a href="{% url 'admin_panel:user_list' %}"{% if 'user_' in request.resolver_match.url_name %} class="active"{% endif %}>Users</a>
+    <a href="{% url 'abbreviation_tool:manage_dictionary' %}">Abbreviations</a>
+    <a href="{% url 'admin_panel:feedback_list' %}"{% if request.resolver_match.url_name == 'feedback_list' %} class="active"{% endif %}>Feedback</a>
+    <a href="{% url 'admin_panel:audit_log' %}"{% if request.resolver_match.url_name == 'audit_log' %} class="active"{% endif %}>Audit log</a>
+  </nav>
+  <a class="back-site" href="{% url 'home' %}">← Back to site</a>
+</aside>
+<div class="admin-page">
+  <header class="admin-topbar"><button class="sidebar-toggle" type="button" aria-label="Toggle sidebar" aria-controls="admin-sidebar" aria-expanded="false">☰</button><span class="topbar-title">{% block page_title %}Administration{% endblock %}</span><details class="admin-account"><summary><span>{{ request.user.username|first|upper }}</span>{{ request.user.username }}</summary><div><a href="{% url 'home' %}">Site dashboard</a>{% if request.user.is_staff %}<a href="{% url 'admin:index' %}">Django admin</a>{% endif %}<form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit">Sign out</button></form></div></details></header>
+  <main class="admin-content">{% for message in messages %}<div class="panel-message {{ message.tags }}">{{ message }}</div>{% endfor %}{% block content %}{% endblock %}</main>
+</div>
+<script>const toggle=document.querySelector('.sidebar-toggle'),sidebar=document.querySelector('.admin-sidebar');toggle?.addEventListener('click',()=>{const open=sidebar.classList.toggle('open');toggle.setAttribute('aria-expanded',open)});</script>
+</body></html>

@@ -25,10 +25,8 @@ class AbbreviationToolPhaseOneTests(TestCase):
         response = self.client.get(reverse("abbreviation_tool:landing"))
         self.assertEqual(response.status_code, 302)
 
-    def test_landing_requires_granular_permission(self):
+    def test_all_authenticated_users_receive_checker_permission(self):
         self.client.force_login(self.user)
-        self.assertEqual(self.client.get(reverse("abbreviation_tool:landing")).status_code, 403)
-        self.grant_standard_access()
         self.assertEqual(self.client.get(reverse("abbreviation_tool:landing")).status_code, 200)
 
     @override_settings(DOCX_ABBREVIATION_TOOL_ENABLED=False)

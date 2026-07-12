@@ -12,6 +12,7 @@ urlpatterns = [
     path("dictionary/manage/<int:entry_id>/delete/", views.delete_dictionary_entry, name="delete_dictionary_entry"),
     path("feedback/", views.feedback, name="feedback"),
     path("text-convert/", views.text_convert, name="text_convert"),
+    path("powerpoint-convert/", views.powerpoint_convert, name="powerpoint_convert"),
     path("upload/", views.upload, name="upload"),
     path("sessions/<uuid:session_id>/", views.session_detail, name="session"),
     path("sessions/<uuid:session_id>/cancel/", views.cancel, name="cancel"),

@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
-    <link rel="stylesheet" href="{% static 'css/tool_hub.css' %}">
+    <link rel="stylesheet" href="{% static 'css/tool_hub.css' %}?v=20260713-3">
     <link rel="stylesheet" href="{% static 'css/navbar.css' %}">
     <link rel="stylesheet" href="{% static 'css/footer.css' %}">
     {% block extra_head %}{% endblock %}
@@ -20,9 +20,8 @@
 
     <main id="main-content">
         <header class="page-header">
-            <span class="kicker">Everyday utility</span>
-            <h1>{% block heading %}{% endblock %}</h1>
-            <p>{% block intro %}{% endblock %}</p>
+            {% include 'partials/tool_page_icon.html' %}
+            <div class="page-header-copy"><span class="kicker">Everyday utility</span><h1>{% block heading %}{% endblock %}</h1><p>{% block intro %}{% endblock %}</p></div>
         </header>
         {% if error %}<div class="alert" role="alert">{{ error }}</div>{% endif %}
         {% for message in messages %}<div class="alert{% if message.tags %} {{ message.tags }}{% endif %}" role="status">{{ message }}</div>{% endfor %}

@@ -33,9 +33,8 @@ def validate_docx(upload):
         raise ValidationError("Only .docx documents are supported.")
     if upload.name.lower().endswith((".docm", ".dotm")):
         raise ValidationError("Macro-enabled documents are not supported.")
-    max_size = settings.DOCX_ABBREVIATION_MAX_UPLOAD_MB * 1024 * 1024
-    if upload.size < 1 or upload.size > max_size:
-        raise ValidationError(f"The DOCX must be no larger than {settings.DOCX_ABBREVIATION_MAX_UPLOAD_MB} MB.")
+    if upload.size < 1:
+        raise ValidationError("The DOCX document is empty.")
     declared_type = (getattr(upload, "content_type", "") or "").lower()
     if declared_type and declared_type not in {DOCX_MIME, "application/zip", "application/octet-stream"}:
         raise ValidationError("The uploaded MIME type is not a DOCX document.")

@@ -78,11 +78,13 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 
 /* ---------- Layout ---------- */
 main { width: min(1100px, calc(100% - 36px)); margin: var(--space-7) auto var(--space-8); }
-.page-header { max-width: 760px; margin-bottom: var(--space-6); }
+.page-header { max-width: 900px; display:flex; align-items:center; gap:22px; margin-bottom: var(--space-6); }
+.page-header-copy{min-width:0}.page-tool-icon{flex:0 0 72px!important;width:72px!important;min-width:72px!important;max-width:72px!important;height:72px!important;min-height:72px!important;max-height:72px!important;display:grid;place-items:center;overflow:hidden;border:1px solid rgba(255,255,255,.18);border-radius:19px;box-shadow:0 16px 32px rgba(0,0,0,.22),inset 0 1px rgba(255,255,255,.18)}.page-tool-icon svg{display:block!important;width:52px!important;min-width:52px!important;max-width:52px!important;height:52px!important;min-height:52px!important;max-height:52px!important;filter:drop-shadow(0 4px 5px rgba(0,0,0,.2))}.page-tool-icon.icon-sd{background:linear-gradient(145deg,#91c8ff,#2552cf)}.page-tool-icon.icon-dictionary{background:linear-gradient(145deg,#ffb84d,#df6b25)}.page-tool-icon.icon-text{background:linear-gradient(145deg,#55dfd7,#1687ae)}.page-tool-icon.icon-qr{background:linear-gradient(145deg,#5b9cff,#3e43b8)}.page-tool-icon.icon-archive{background:linear-gradient(145deg,#ff8d75,#b93658)}.page-tool-icon.icon-image{background:linear-gradient(145deg,#3dd9cd,#1676bc)}.page-tool-icon.icon-advanced{background:linear-gradient(145deg,#a66cff,#5542c7)}
 .kicker { display: inline-block; color: var(--color-accent); font-size: 11px; font-weight: 700; letter-spacing: 1.6px; text-transform: uppercase; }
 h1 { font-size: clamp(32px, 5vw, 52px); line-height: 1.05; letter-spacing: -1.5px; margin: 10px 0 12px; }
 h2 { font-size: 22px; letter-spacing: -.4px; margin: 0 0 6px; }
 .page-header p { margin: 0; color: var(--color-muted); font-size: 15px; line-height: 1.6; max-width: 60ch; }
+@media(max-width:560px){.page-header{align-items:flex-start;gap:13px}.page-tool-icon{flex-basis:56px!important;width:56px!important;min-width:56px!important;max-width:56px!important;height:56px!important;min-height:56px!important;max-height:56px!important;border-radius:15px}.page-tool-icon svg{width:40px!important;min-width:40px!important;max-width:40px!important;height:40px!important;min-height:40px!important;max-height:40px!important}}
 
 /* ---------- Alerts ---------- */
 .alert {

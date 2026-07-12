@@ -1,7 +1,7 @@
 import re
 
 import fitz
-from django.contrib.auth.decorators import login_required
+from accounts.decorators import user_required
 from django.db.models import Q
 from django.shortcuts import render
 
@@ -9,7 +9,7 @@ from .models import Abbreviation
 from .parser import abbreviation_candidates
 
 
-@login_required
+@user_required
 def checker(request):
     context = {"database_count": Abbreviation.objects.count()}
     query = request.GET.get("q", "").strip()

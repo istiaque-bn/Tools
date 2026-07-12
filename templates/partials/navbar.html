@@ -1,25 +1,35 @@
 <nav class="site-navbar" aria-label="Main navigation">
-    <a class="site-brand" href="{% url 'home' %}" aria-label="Necessary Tools home">
-        <span class="site-brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
-        <span>Necessary <strong>Tools</strong></span>
-    </a>
-    {% if request.user.is_authenticated %}
+  <a class="site-brand" href="{% url 'home' %}" aria-label="Necessary Tools home">
+    <span class="site-brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+    <span>Necessary <strong>Tools</strong></span>
+  </a>
+  {% if request.user.is_authenticated %}
     <div class="site-nav-links">
-        <a href="{% url 'home' %}#tools">Tools</a>
-        <a href="{% url 'pdf_toolkit' %}">PDF</a>
-        <a href="{% url 'image_toolkit' %}">Images</a>
-        {% if docx_abbreviation_tool_enabled and perms.abbreviation_tool.access_abbreviation_tool %}<a href="{% url 'abbreviation_tool:landing' %}">SD Checker</a>{% endif %}
-        {% if docx_abbreviation_tool_enabled %}<a href="{% url 'abbreviation_tool:feedback' %}">Feedback</a>{% endif %}
-        {% if request.user.is_staff and docx_abbreviation_tool_enabled %}<a href="{% url 'abbreviation_tool:manage_dictionary' %}">Manage</a>{% endif %}
-        <a href="{% url 'advanced_toolkit' %}">Advanced</a>
+      <a href="{% url 'home' %}">{% if is_admin_user %}Site Home{% else %}Dashboard{% endif %}</a>
+      <details class="site-tools-menu">
+        <summary>Tools <span aria-hidden="true">⌄</span></summary>
+        <div class="tools-dropdown">
+          <a href="{% url 'pdf_toolkit' %}">PDF Toolkit</a>
+          <a href="{% url 'image_toolkit' %}">Image Toolkit</a>
+          <a href="{% url 'dictionary_tool' %}">Dictionary</a>
+          {% if docx_abbreviation_tool_enabled and perms.abbreviation_tool.access_abbreviation_tool %}<a href="{% url 'abbreviation_tool:landing' %}">SD Checker</a>{% endif %}
+          <a href="{% url 'text_toolkit' %}">Text Toolkit</a>
+          <a href="{% url 'advanced_toolkit' %}">Advanced Tools</a>
+        </div>
+      </details>
+      {% if is_admin_user %}<a href="{% url 'admin_panel:dashboard' %}">Admin Panel</a>{% endif %}
     </div>
-    <div class="site-account">
-        <span class="site-avatar" aria-hidden="true">{{ request.user.username|first|upper }}</span>
-        <span class="site-username">{{ request.user.username }}</span>
+    <details class="site-account-menu">
+      <summary><span class="site-avatar" aria-hidden="true">{{ request.user.username|first|upper }}</span><span class="site-username">{{ request.user.username }}</span><span aria-hidden="true">⌄</span></summary>
+      <div class="account-dropdown">
+        <span class="account-role">{% if is_admin_user %}Administrator{% else %}User account{% endif %}</span>
+        <a href="{% url 'abbreviation_tool:feedback' %}">Send feedback</a>
+        {% if is_admin_user %}<a href="{% url 'admin_panel:dashboard' %}">Admin Panel</a>{% endif %}
         <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit">Sign out</button></form>
-    </div>
-    {% else %}
-    <span class="site-nav-note">Everything you need, in one place.</span>
-    {% endif %}
+      </div>
+    </details>
+  {% else %}<span class="site-nav-note">Everything you need, in one place.</span>{% endif %}
 </nav>
-<style>.site-brand{font-size:18px}.site-nav-links a,.site-account{font-size:14px}.icon-action.danger-button{border:1px solid #ffffff24;color:#91b8fa;background:#3263b52b}.icon-action.danger-button:hover{color:#fff;background:#3263b566}</style>
+<style>
+.site-brand{font-size:18px}.site-nav-links a{font-size:14px}.site-tools-menu,.site-account-menu{position:relative;color:#bdcae0;font-size:13px}.site-tools-menu summary,.site-account-menu summary{display:flex;align-items:center;gap:6px;cursor:pointer;list-style:none}.site-tools-menu summary::-webkit-details-marker,.site-account-menu summary::-webkit-details-marker{display:none}.site-tools-menu summary{padding:7px 10px;border-radius:7px;color:#91a5c8;font-size:14px}.site-tools-menu summary:hover{color:#fff;background:rgba(80,130,215,.13)}.tools-dropdown,.account-dropdown{position:absolute;top:40px;padding:10px;border:1px solid #ffffff20;border-radius:12px;background:#0a2044;box-shadow:0 16px 35px #0007}.tools-dropdown{left:0;width:210px}.tools-dropdown a{display:block!important;padding:9px 10px!important;border-radius:6px;color:#b9c8df!important;text-decoration:none}.tools-dropdown a:hover{color:#fff!important;background:#ffffff0d}.site-account-menu{margin-left:8px}.account-dropdown{right:0;width:210px}.account-dropdown a,.account-dropdown button,.account-role{box-sizing:border-box;display:block;width:100%;min-height:0;margin:0;padding:9px 10px;border:0;border-radius:6px;color:#b9c8df;background:transparent;box-shadow:none;text-align:left;text-decoration:none;text-transform:none;letter-spacing:normal;font:inherit;line-height:1.2}.account-dropdown a:hover{color:#fff;background:#ffffff0d}.account-dropdown form{display:block;width:100%;margin:8px 0 0;padding:0;background:transparent}.account-dropdown form button{appearance:none;width:100%;padding:12px 18px;border:2px solid #294d7d;border-radius:999px;color:#cfdaec;background:#0b2348;box-shadow:none;font-size:15px;font-weight:500;text-align:left;cursor:pointer}.account-dropdown form button:hover{border-color:#4675ad;color:#fff;background:#102d57;box-shadow:none;transform:none}.account-role{border-bottom:1px solid #ffffff12;border-radius:0;color:#7590ba;font-size:11px}@media(max-width:570px){.site-nav-links{display:flex;margin-left:auto}.site-nav-links>a{display:none}.site-username{display:none}.tools-dropdown{left:auto;right:0}}
+</style>

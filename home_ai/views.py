@@ -13,6 +13,10 @@ from pypdf import PdfReader, PdfWriter
 from pypdf.errors import PdfReadError
 from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont, ImageOps, UnidentifiedImageError
 from reportlab.pdfgen import canvas
+from django.utils.http import url_has_allowed_host_and_scheme
+
+from accounts.decorators import user_required
+from accounts.utils import is_admin_user
 
 
 MAX_IMAGE_SIZE = 25 * 1024 * 1024
@@ -127,7 +131,7 @@ def _image_download(image, output_format, filename, quality=88):
 
 def login_view(request):
     if request.user.is_authenticated:
-        return redirect("home")
+        return redirect("admin_panel:dashboard" if is_admin_user(request.user) else "home")
 
     if request.method == "POST":
         username = request.POST.get("username", "").strip()
@@ -136,16 +140,18 @@ def login_view(request):
 
         if user is not None:
             login(request, user)
-            return redirect("home")
+            next_url = request.POST.get("next") or request.GET.get("next")
+            if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()):
+                return redirect(next_url)
+            return redirect("admin_panel:dashboard" if is_admin_user(user) else "home")
 
         messages.error(request, "The username or password you entered is incorrect.")
 
     return render(request, "login.html")
 
 
+@user_required
 def home_view(request):
-    if not request.user.is_authenticated:
-        return redirect("login")
     from django.conf import settings
     return render(request, "home.html", {"docx_abbreviation_tool_enabled": settings.DOCX_ABBREVIATION_TOOL_ENABLED})
 
@@ -158,10 +164,12 @@ def logout_view(request):
     return redirect("login")
 
 
-def pdf_toolkit_view(request):
-    if not request.user.is_authenticated:
-        return redirect(f"{reverse('login')}?next={request.path}")
+def permission_denied_view(request, exception=None):
+    return render(request, "403.html", status=403)
 
+
+@user_required
+def pdf_toolkit_view(request):
     context = {}
     if request.method != "POST":
         return render(request, "pdf_toolkit.html", context)
@@ -337,9 +345,8 @@ def pdf_toolkit_view(request):
         return render(request, "pdf_toolkit.html", context, status=400)
 
 
+@user_required
 def pdf_preview_view(request):
-    if not request.user.is_authenticated:
-        return JsonResponse({"error": "Sign in is required."}, status=401)
     if request.method != "POST":
         return JsonResponse({"error": "Upload a PDF to create previews."}, status=405)
     upload = request.FILES.get("pdf_file")
@@ -365,9 +372,8 @@ def pdf_preview_view(request):
         return JsonResponse({"error": str(exc) or "This PDF could not be previewed."}, status=400)
 
 
+@user_required
 def image_toolkit_view(request):
-    if not request.user.is_authenticated:
-        return redirect(f"{reverse('login')}?next={request.path}")
     if request.method != "POST":
         return render(request, "image_toolkit.html")
     action = request.POST.get("action", "compress_image")

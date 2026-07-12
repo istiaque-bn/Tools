@@ -1,5 +1,4 @@
 import base64
-import hashlib
 import io
 import json
 import re
@@ -11,7 +10,7 @@ from pathlib import Path
 
 import fitz
 import qrcode
-from django.contrib.auth.decorators import login_required
+from accounts.decorators import user_required
 from django.http import FileResponse, JsonResponse
 from django.shortcuts import render
 from django.views.decorators.http import require_POST
@@ -42,7 +41,7 @@ def _image(upload):
         raise ValueError("That file is not a supported image.") from exc
 
 
-@login_required
+@user_required
 def qr_toolkit(request):
     context = {}
     if request.method == "POST":
@@ -94,7 +93,6 @@ def _text_result(action, text, request):
     if action == "url_decode":
         from urllib.parse import unquote
         return unquote(text)
-    if action in {"md5", "sha256", "sha512"}: return hashlib.new(action, text.encode()).hexdigest()
     if action == "uuid": return str(uuid.uuid4())
     if action == "timestamp":
         value = text.strip()
@@ -105,7 +103,7 @@ def _text_result(action, text, request):
     raise ValueError("Choose a valid operation.")
 
 
-@login_required
+@user_required
 def text_toolkit(request):
     context = {}
     if request.method == "POST":
@@ -117,7 +115,7 @@ def text_toolkit(request):
     return render(request, "text_toolkit.html", context)
 
 
-@login_required
+@user_required
 def batch_images(request):
     context = {}
     if request.method == "POST":
@@ -147,7 +145,7 @@ def batch_images(request):
     return render(request, "batch_images.html", context)
 
 
-@login_required
+@user_required
 def archive_toolkit(request):
     context = {}
     if request.method == "POST":
@@ -173,7 +171,7 @@ def archive_toolkit(request):
     return render(request, "archive_toolkit.html", context)
 
 
-@login_required
+@user_required
 def advanced_toolkit(request):
     context = {}
     if request.method == "POST":
@@ -222,8 +220,21 @@ def advanced_toolkit(request):
     return render(request, "advanced_toolkit.html", context)
 
 
+@user_required
+def dictionary_tool(request):
+    query = " ".join(request.GET.get("q", "").split())[:80]
+    context = {"query": query}
+    if query:
+        from .dictionary_provider import DictionaryLookupError, lookup_word
+        try:
+            context["entry"] = lookup_word(query)
+        except DictionaryLookupError as exc:
+            context["error"] = str(exc)
+    return render(request, "dictionary_tool.html", context)
+
+
 @require_POST
-@login_required
+@user_required
 def tools_api(request):
     try:
         payload = json.loads(request.body or b"{}")

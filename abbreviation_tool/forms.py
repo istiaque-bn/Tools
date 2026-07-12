@@ -95,3 +95,19 @@ class QuickProcessForm(forms.Form):
         upload = self.cleaned_data["docx_file"]
         self.inspection = validate_docx(upload)
         return upload
+
+
+class PowerPointProcessForm(forms.Form):
+    operation_type = forms.ChoiceField(choices=DocumentProcessingSession.Operation.choices, widget=forms.RadioSelect, initial=DocumentProcessingSession.Operation.ABBREVIATE)
+    presentation_file = forms.FileField(label="PowerPoint presentation")
+
+    def clean_presentation_file(self):
+        upload = self.cleaned_data["presentation_file"]
+        name = upload.name.lower()
+        if name.endswith(".ppt"):
+            raise forms.ValidationError("Legacy .ppt files cannot be safely edited. Open the file in PowerPoint or LibreOffice and save it as .pptx first.")
+        if not name.endswith(".pptx"):
+            raise forms.ValidationError("Upload a PowerPoint .pptx file.")
+        if upload.size < 1:
+            raise forms.ValidationError("The presentation is empty.")
+        return upload

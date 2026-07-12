@@ -63,7 +63,7 @@ class FinalHardeningTests(TestCase):
         self.assertEqual(response.status_code, 200)
         processed = b"".join(response.streaming_content); response.close()
         with zipfile.ZipFile(BytesIO(processed)) as package:
-            self.assertIn(b">HQ<", package.read("word/document.xml"))
+            self.assertIn(b">Headquarters (HQ)<", package.read("word/document.xml"))
 
     def test_two_way_text_converter(self):
         AbbreviationEntry.objects.filter(abbreviation="HQ").update(is_ambiguous=False)
