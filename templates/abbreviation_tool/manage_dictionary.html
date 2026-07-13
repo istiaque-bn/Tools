@@ -1,19 +1,35 @@
 {% extends 'admin_panel/base_admin.html' %}
 {% block title %}Manage Abbreviations{% endblock %}
 {% block page_title %}Manage Abbreviations{% endblock %}
-{% block intro %}Add, correct and bulk-import abbreviation and full-form pairs {% endblock %}
+{% block intro %}Add, correct and bulk-import abbreviation and full-form pairs{% endblock %}
 {% block content %}
-<div class="management-summary"><article class="count-card" aria-label="Total abbreviations"><span>Total abbreviations</span><strong>{{ total_entries }}</strong></article></div>
-<section class="tool-panel">
-  <h2>Find an entry</h2>
-  <form method="get" class="management-search" role="search">
-    <label for="abbreviation-search">Search abbreviation or full form</label>
-    <div class="search-row"><input id="abbreviation-search" type="search" name="q" value="{{ query }}" maxlength="200" placeholder="e.g. WHO or World Health Organization"><button type="submit">Search</button>{% if query %}<a href="{% url 'abbreviation_tool:manage_dictionary' %}">Clear</a>{% endif %}</div>
-  </form>
-  {% if query %}<h3>Results for “{{ query }}”</h3>
-  <table><thead><tr><th>Abbreviation</th><th>Full form</th><th>Action</th></tr></thead><tbody>
-  {% for entry in search_results %}{% include 'abbreviation_tool/entry_row.html' %}{% empty %}<tr><td colspan="3">No abbreviations match your search.</td></tr>{% endfor %}
-  </tbody></table>
+  <div class="management-summary">
+    <article class="count-card" aria-label="Total abbreviations"><span>Total abbreviations</span><strong>{{ total_entries }}</strong></article>
+  </div>
+  <section class="tool-panel">
+    <h2>Find an entry</h2>
+    <form method="get" class="management-search" role="search">
+      <label for="abbreviation-search">Search abbreviation or full form</label>
+      <div class="search-row"><input id="abbreviation-search"
+       type="search"
+       name="q"
+       value="{{ query }}"
+       maxlength="200"
+       placeholder="e.g. WHO or World Health Organization"><button type="submit">Search</button>{% if query %}<a href="{% url 'abbreviation_tool:manage_dictionary' %}">Clear</a>{% endif %}</div>
+    </form>
+    {% if query %}<h3>Results for “{{ query }}”</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Abbreviation</th>
+          <th>Full form</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for entry in search_results %}{% include 'abbreviation_tool/entry_row.html' %}{% empty %}<tr><td colspan="3">No abbreviations match your search.</td></tr>{% endfor %}
+      </tbody>
+    </table>
   {% endif %}
 </section>
 <section class="tool-panel">
@@ -27,11 +43,128 @@
 </section>
 <section class="jssdm-results">
   <h2>Current Entries</h2>
-  <div class="entries-scroll" tabindex="0" aria-label="All abbreviation entries" style="max-height:520px;overflow:auto;border:1px solid rgba(255,255,255,.1);border-radius:10px;">
-  <table><thead><tr><th>Abbreviation</th><th>Full Form</th><th>Action</th></tr></thead><tbody>
-  {% for entry in entries %}{% include 'abbreviation_tool/entry_row.html' %}{% empty %}<tr><td colspan="3">No entries yet.</td></tr>{% endfor %}
-  </tbody></table>
+  <div class="entries-scroll"
+       tabindex="0"
+       aria-label="All abbreviation entries"
+       style="max-height:520px;
+              overflow:auto;
+              border:1px solid rgba(255,255,255,.1);
+              border-radius:10px">
+    <table>
+      <thead>
+        <tr>
+          <th>Abbreviation</th>
+          <th>Full Form</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for entry in entries %}{% include 'abbreviation_tool/entry_row.html' %}{% empty %}<tr><td colspan="3">No entries yet.</td></tr>{% endfor %}
+      </tbody>
+    </table>
   </div>
 </section>
 {% endblock %}
-{% block extra_head %}<style>.management-summary{display:flex;justify-content:flex-end;margin:-10px 0 18px}.count-card{display:flex;align-items:center;gap:18px;min-width:220px;padding:16px 20px;border:1px solid #6090df55;border-radius:12px;background:linear-gradient(145deg,#173564,#0d244a);box-shadow:0 10px 28px #03142f40}.count-card span{color:#aebdd5;font-size:14px}.count-card strong{margin-left:auto;color:#fff;font-size:30px;line-height:1}.management-search{margin:16px 0 20px}.search-row{display:flex;align-items:center;gap:8px;margin-top:7px}.search-row input{flex:1;min-width:180px}.search-row button{width:auto;margin:0}.inline-action{display:inline;margin:0}.icon-action{display:inline-grid;place-items:center;width:34px;height:34px;margin:0 2px;padding:7px;border:1px solid #ffffff24;border-radius:7px;color:#91b8fa;background:#3263b52b;vertical-align:middle;cursor:pointer}.icon-action svg{width:18px;height:18px;fill:currentColor}.icon-action:hover{color:#fff;background:#3263b566}.icon-action.danger-button{color:#ff8e98;background:#9f24352b}.icon-action.danger-button:hover{color:#fff;background:#b72f43}@media(max-width:600px){.management-summary{justify-content:stretch}.count-card{width:100%}}</style>{% endblock %}
+{% block extra_head %}<style>
+    .management-summary {
+        display: flex;
+        justify-content: flex-end;
+        margin: -10px 0 18px
+    }
+
+    .count-card {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        min-width: 220px;
+        padding: 16px 20px;
+        border: 1px solid #6090df55;
+        border-radius: 12px;
+        background: linear-gradient(145deg, #173564, #0d244a);
+        box-shadow: 0 10px 28px #03142f40
+    }
+
+    .count-card span {
+        color: #aebdd5;
+        font-size: 14px
+    }
+
+    .count-card strong {
+        margin-left: auto;
+        color: #fff;
+        font-size: 30px;
+        line-height: 1
+    }
+
+    .management-search {
+        margin: 16px 0 20px
+    }
+
+    .search-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 7px
+    }
+
+    .search-row input {
+        flex: 1;
+        min-width: 180px
+    }
+
+    .search-row button {
+        width: auto;
+        margin: 0
+    }
+
+    .inline-action {
+        display: inline;
+        margin: 0
+    }
+
+    .icon-action {
+        display: inline-grid;
+        place-items: center;
+        width: 34px;
+        height: 34px;
+        margin: 0 2px;
+        padding: 7px;
+        border: 1px solid #ffffff24;
+        border-radius: 7px;
+        color: #91b8fa;
+        background: #3263b52b;
+        vertical-align: middle;
+        cursor: pointer
+    }
+
+    .icon-action svg {
+        width: 18px;
+        height: 18px;
+        fill: currentColor
+    }
+
+    .icon-action:hover {
+        color: #fff;
+        background: #3263b566
+    }
+
+    .icon-action.danger-button {
+        color: #ff8e98;
+        background: #9f24352b
+    }
+
+    .icon-action.danger-button:hover {
+        color: #fff;
+        background: #b72f43
+    }
+
+    @media(max-width:600px) {
+        .management-summary {
+            justify-content: stretch
+        }
+
+        .count-card {
+            width: 100%
+        }
+    }
+</style>{% endblock %}

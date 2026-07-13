@@ -1,7 +1,9 @@
 import json
 from unittest.mock import patch
+from urllib.error import URLError
 
 from django.contrib.auth import get_user_model
+from django.core.cache import cache
 from django.test import TestCase
 from django.urls import reverse
 
@@ -61,6 +63,19 @@ class DictionaryToolTests(TestCase):
             response = self.client.get(reverse("dictionary_tool"), {"q": "<script>"})
         self.assertContains(response, "Enter an English word")
         mocked.assert_not_called()
+
+    def test_saved_definition_remains_available_when_audio_provider_is_offline(self):
+        self.client.force_login(self.user)
+        cache.clear()
+        with patch("home_ai.dictionary_provider.urlopen", return_value=FakeResponse(SAMPLE)):
+            self.client.get(reverse("dictionary_tool"), {"q": "hello"})
+        cache.clear()
+        with patch("home_ai.dictionary_provider.urlopen", side_effect=URLError("offline")):
+            response = self.client.get(reverse("dictionary_tool"), {"q": "hello"})
+        self.assertContains(response, "Used as a greeting.")
+        self.assertContains(response, "offline data")
+        self.assertContains(response, "Pronunciation audio requires an internet connection.")
+        self.assertNotContains(response, "hello-uk.mp3")
 
     def test_dashboard_shows_dictionary_card(self):
         self.client.force_login(self.user)

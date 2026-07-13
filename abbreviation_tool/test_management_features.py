@@ -116,6 +116,26 @@ class ManagementFeatureTests(TestCase):
         converted = Presentation(BytesIO(b"".join(response.streaming_content)))
         self.assertEqual(converted.slides[0].shapes[0].text, "Headquarters (HQ) and HQ")
 
+    def test_powerpoint_abbreviates_all_full_forms_even_when_abbreviation_is_ambiguous(self):
+        general = AbbreviationProfile.objects.get(name="General")
+        officer = AbbreviationEntry.objects.create(abbreviation="CO", full_form="Commanding Officer", is_ambiguous=True)
+        company = AbbreviationEntry.objects.create(abbreviation="CO", full_form="Company", is_ambiguous=True)
+        officer.profiles.add(general)
+        company.profiles.add(general)
+        presentation = Presentation()
+        slide = presentation.slides.add_slide(presentation.slide_layouts[6])
+        box = slide.shapes.add_textbox(Inches(1), Inches(1), Inches(8), Inches(1))
+        box.text_frame.paragraphs[0].text = "Commanding Officer met the Commanding Officer at the Company."
+        content = BytesIO()
+        presentation.save(content)
+        upload = SimpleUploadedFile("ambiguous.pptx", content.getvalue(), content_type="application/vnd.openxmlformats-officedocument.presentationml.presentation")
+
+        response = self.client.post(reverse("abbreviation_tool:powerpoint_convert"), {"operation_type": "abbreviate", "presentation_file": upload})
+
+        self.assertEqual(response.status_code, 200)
+        converted = Presentation(BytesIO(b"".join(response.streaming_content)))
+        self.assertEqual(converted.slides[0].shapes[0].text, "Commanding Officer (CO) met the CO at the Company (CO).")
+
     def test_legacy_ppt_receives_safe_conversion_message(self):
         upload = SimpleUploadedFile("legacy.ppt", b"legacy", content_type="application/vnd.ms-powerpoint")
         response = self.client.post(reverse("abbreviation_tool:powerpoint_convert"), {"operation_type": "abbreviate", "presentation_file": upload})

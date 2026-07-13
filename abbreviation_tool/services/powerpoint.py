@@ -64,7 +64,12 @@ def process_powerpoint(upload, operation, profile):
                 character_map = [CharacterLocation(run_index, offset, str(run_index).encode()) for run_index, run in enumerate(paragraph.runs) for offset in range(len(run.text))]
                 container = TextContainer("pptx", f"pptx:p{paragraph_index}", "powerpoint_paragraph", text, character_map)
                 matches = find_matches(container, candidates, operation, POLICY_DEFINE_FIRST, seen)
-                matches = [match for match in matches if match.ambiguity == "unambiguous"]
+                # A full form identifies its intended meaning, even when several
+                # meanings share the same abbreviation. Expanding an ambiguous
+                # abbreviation is unsafe, so retain that restriction only for
+                # deabbreviation.
+                if operation == DocumentProcessingSession.Operation.DEABBREVIATE:
+                    matches = [match for match in matches if match.ambiguity == "unambiguous"]
                 for match in sorted(matches, key=lambda item: item.start, reverse=True):
                     _replace_range(paragraph, match.start, match.end, match.proposed)
                     replacement_count += 1

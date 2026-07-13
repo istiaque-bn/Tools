@@ -7,3 +7,4 @@ qrcode==8.2
 lxml==6.0.2
 openpyxl==3.1.5
 python-pptx==1.0.2
+psycopg[binary]==3.2.13
