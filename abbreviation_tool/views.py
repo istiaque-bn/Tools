@@ -211,6 +211,42 @@ def manage_dictionary(request, entry_id=None):
 
 
 @admin_required
+def export_dictionary_xlsx(request):
+    _require_feature()
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill
+
+    workbook = Workbook(write_only=False)
+    worksheet = workbook.active
+    worksheet.title = "Abbreviations"
+    worksheet.append(("abbreviation", "full_form"))
+    for abbreviation, full_form in AbbreviationEntry.objects.order_by("abbreviation", "full_form").values_list("abbreviation", "full_form").iterator():
+        worksheet.append((abbreviation, full_form))
+
+    header_fill = PatternFill("solid", fgColor="173564")
+    for cell in worksheet[1]:
+        cell.font = Font(bold=True, color="FFFFFF")
+        cell.fill = header_fill
+    worksheet.freeze_panes = "A2"
+    worksheet.auto_filter.ref = worksheet.dimensions
+    worksheet.column_dimensions["A"].width = 24
+    worksheet.column_dimensions["B"].width = 72
+
+    output = io.BytesIO()
+    workbook.save(output)
+    output.seek(0)
+    response = FileResponse(
+        output,
+        as_attachment=True,
+        filename=f"abbreviations-{timezone.localdate().isoformat()}.xlsx",
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+    response["X-Content-Type-Options"] = "nosniff"
+    response["Cache-Control"] = "no-store, private"
+    return response
+
+
+@admin_required
 def delete_dictionary_entry(request, entry_id):
     _require_feature()
     if request.method != "POST":

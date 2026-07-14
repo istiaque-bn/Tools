@@ -8,6 +8,7 @@ urlpatterns = [
     path("", views.landing, name="landing"),
     path("dictionary/", views.dictionary, name="dictionary"),
     path("dictionary/manage/", views.manage_dictionary, name="manage_dictionary"),
+    path("dictionary/manage/export.xlsx", views.export_dictionary_xlsx, name="export_dictionary_xlsx"),
     path("dictionary/manage/<int:entry_id>/", views.manage_dictionary, name="edit_dictionary_entry"),
     path("dictionary/manage/<int:entry_id>/delete/", views.delete_dictionary_entry, name="delete_dictionary_entry"),
     path("feedback/", views.feedback, name="feedback"),

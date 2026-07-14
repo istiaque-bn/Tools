@@ -3,7 +3,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
 from io import BytesIO
-from openpyxl import Workbook
+from openpyxl import Workbook, load_workbook
 from pptx import Presentation
 from pptx.util import Inches
 
@@ -77,6 +77,22 @@ class ManagementFeatureTests(TestCase):
         response = self.client.post(reverse("abbreviation_tool:manage_dictionary"), {"import-file": upload, "import_entries": "1"})
         self.assertRedirects(response, reverse("abbreviation_tool:manage_dictionary"))
         self.assertTrue(AbbreviationEntry.objects.filter(abbreviation="EU", full_form="European Union").exists())
+
+    def test_staff_can_export_every_abbreviation_to_xlsx(self):
+        AbbreviationEntry.objects.create(abbreviation="WHO", full_form="World Health Organization")
+        AbbreviationEntry.objects.create(abbreviation="UN", full_form="United Nations")
+
+        response = self.client.get(reverse("abbreviation_tool:export_dictionary_xlsx"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+        self.assertIn(".xlsx", response["Content-Disposition"])
+        workbook = load_workbook(BytesIO(b"".join(response.streaming_content)), read_only=True)
+        rows = list(workbook.active.iter_rows(values_only=True))
+        self.assertEqual(rows[0], ("abbreviation", "full_form"))
+        self.assertIn(("WHO", "World Health Organization"), rows)
+        self.assertIn(("UN", "United Nations"), rows)
+        self.assertEqual(len(rows), AbbreviationEntry.objects.count() + 1)
 
     def test_multiple_full_forms_are_kept_as_separate_ambiguous_meanings(self):
         AbbreviationEntry.objects.create(abbreviation="CO", full_form="Commanding Officer")

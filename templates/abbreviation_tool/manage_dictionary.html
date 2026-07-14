@@ -4,6 +4,7 @@
 {% block intro %}Add, correct and bulk-import abbreviation and full-form pairs{% endblock %}
 {% block content %}
   <div class="management-summary">
+    <a class="export-button" href="{% url 'abbreviation_tool:export_dictionary_xlsx' %}">Download all as XLSX</a>
     <article class="count-card" aria-label="Total abbreviations"><span>Total abbreviations</span><strong>{{ total_entries }}</strong></article>
   </div>
   <section class="tool-panel">
@@ -68,8 +69,24 @@
 {% block extra_head %}<style>
     .management-summary {
         display: flex;
+        align-items: center;
+        gap: 12px;
         justify-content: flex-end;
         margin: -10px 0 18px
+    }
+
+    .export-button {
+        padding: 11px 16px;
+        border: 1px solid #6090df88;
+        border-radius: 9px;
+        color: #dbe8ff;
+        background: #173564;
+        text-decoration: none
+    }
+
+    .export-button:hover {
+        color: #fff;
+        background: #234b84
     }
 
     .count-card {
@@ -160,6 +177,8 @@
 
     @media(max-width:600px) {
         .management-summary {
+            align-items: stretch;
+            flex-direction: column;
             justify-content: stretch
         }
 
