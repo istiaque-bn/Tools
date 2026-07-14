@@ -22,26 +22,34 @@ class FakeResponse:
         return json.dumps(self.payload).encode()
 
 
-SAMPLE = [{
-    "word": "hello",
-    "phonetic": "/həˈləʊ/",
-    "phonetics": [
-        {"text": "/həˈləʊ/", "audio": "https://example.test/hello-uk.mp3"},
-        {"text": "/həˈloʊ/", "audio": "https://example.test/hello-us.mp3"},
-    ],
-    "meanings": [{
-        "partOfSpeech": "exclamation",
-        "synonyms": ["greeting"],
-        "antonyms": ["goodbye"],
-        "definitions": [{"definition": "Used as a greeting.", "example": "Hello, everyone."}],
-    }],
-    "sourceUrls": ["https://en.wiktionary.org/wiki/hello"],
-}]
+SAMPLE = [
+    {
+        "word": "hello",
+        "phonetic": "/həˈləʊ/",
+        "phonetics": [
+            {"text": "/həˈləʊ/", "audio": "https://example.test/hello-uk.mp3"},
+            {"text": "/həˈloʊ/", "audio": "https://example.test/hello-us.mp3"},
+        ],
+        "meanings": [
+            {
+                "partOfSpeech": "exclamation",
+                "synonyms": ["greeting"],
+                "antonyms": ["goodbye"],
+                "definitions": [
+                    {"definition": "Used as a greeting.", "example": "Hello, everyone."}
+                ],
+            }
+        ],
+        "sourceUrls": ["https://en.wiktionary.org/wiki/hello"],
+    }
+]
 
 
 class DictionaryToolTests(TestCase):
     def setUp(self):
-        self.user = get_user_model().objects.create_user("dictionary-user", password="test-password")
+        self.user = get_user_model().objects.create_user(
+            "dictionary-user", password="test-password"
+        )
 
     def test_dictionary_requires_login(self):
         response = self.client.get(reverse("dictionary_tool"))
@@ -53,7 +61,16 @@ class DictionaryToolTests(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(reverse("dictionary_tool"), {"q": "hello"})
         self.assertEqual(response.status_code, 200)
-        for text in ("Used as a greeting.", "exclamation", "/həˈləʊ/", "Hello, everyone.", "greeting", "goodbye", "British", "American"):
+        for text in (
+            "Used as a greeting.",
+            "exclamation",
+            "/həˈləʊ/",
+            "Hello, everyone.",
+            "greeting",
+            "goodbye",
+            "British",
+            "American",
+        ):
             self.assertContains(response, text)
         mocked.assert_called_once()
 
@@ -67,16 +84,24 @@ class DictionaryToolTests(TestCase):
     def test_saved_definition_remains_available_when_audio_provider_is_offline(self):
         self.client.force_login(self.user)
         cache.clear()
-        with patch("home_ai.dictionary_provider.urlopen", return_value=FakeResponse(SAMPLE)):
+        with patch(
+            "home_ai.dictionary_provider.urlopen", return_value=FakeResponse(SAMPLE)
+        ):
             self.client.get(reverse("dictionary_tool"), {"q": "hello"})
         cache.clear()
-        with patch("home_ai.dictionary_provider.urlopen", side_effect=URLError("offline")):
+        with patch(
+            "home_ai.dictionary_provider.urlopen", side_effect=URLError("offline")
+        ):
             response = self.client.get(reverse("dictionary_tool"), {"q": "hello"})
         self.assertContains(response, "Used as a greeting.")
         self.assertContains(response, "offline data")
-        self.assertContains(response, "Pronunciation audio requires an internet connection.")
+        self.assertContains(
+            response, "Pronunciation audio requires an internet connection."
+        )
         self.assertNotContains(response, "hello-uk.mp3")
 
     def test_dashboard_shows_dictionary_card(self):
         self.client.force_login(self.user)
-        self.assertContains(self.client.get(reverse("home")), reverse("dictionary_tool"))
+        self.assertContains(
+            self.client.get(reverse("home")), reverse("dictionary_tool")
+        )

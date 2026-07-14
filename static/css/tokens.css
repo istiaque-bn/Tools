@@ -1,6 +1,4 @@
-/* Shared design tokens for the Tier B tool pages (tool_base.html + tool_hub.css).
-   Values are matched to the existing home/login/pdf/image toolkit palette so
-   every page in the app reads as one product. */
+/* Shared tool-page design tokens. */
 :root {
     --color-bg: #06183d;
     --color-bg-deep: #030c20;

@@ -1,1 +1,45 @@
-{% extends 'tool_base.html' %}{% block title %}Archives{% endblock %}{% block heading %}Archive Toolkit{% endblock %}{% block intro %}Create a ZIP from multiple files or safely inspect an existing archive.{% endblock %}{% block content %}<div class="two"><form method="post" enctype="multipart/form-data">{% csrf_token %}<h2>Create ZIP</h2><input type="hidden" name="action" value="create"><input name="files" type="file" multiple required><button type="submit">Create & download</button></form><form method="post" enctype="multipart/form-data">{% csrf_token %}<h2>Inspect ZIP</h2><input type="hidden" name="action" value="inspect"><input name="archive" type="file" accept=".zip" required><button type="submit">Inspect archive</button></form></div>{% if entries %}<div class="table-scroll"><table><thead><tr><th>Entry</th><th>Original bytes</th><th>Compressed bytes</th></tr></thead><tbody>{% for item in entries %}<tr><td>{{ item.name }}</td><td>{{ item.size }}</td><td>{{ item.compressed }}</td></tr>{% endfor %}</tbody></table></div>{% endif %}{% endblock %}
+{% extends 'tool_base.html' %}
+
+{% block title %}Archives{% endblock %}
+{% block heading %}Archive Toolkit{% endblock %}
+{% block intro %}Create ZIP or 7Z archives, add AES password protection, or remove a ZIP password.{% endblock %}
+
+{% block content %}
+  <div class="two">
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <h2>Create archive</h2>
+      <input type="hidden" name="action" value="create">
+      <label>
+        Archive format
+        <select name="format">
+          <option value="zip">ZIP — most compatible</option>
+          <option value="7z">7Z — stronger compression</option>
+        </select>
+      </label>
+      <input name="files" type="file" multiple required>
+      <label>
+        Password (optional)
+        <input name="password" type="password" maxlength="128" autocomplete="new-password">
+      </label>
+      <label>
+        Confirm password
+        <input name="password_confirm" type="password" maxlength="128" autocomplete="new-password">
+      </label>
+      <button type="submit">Create & download</button>
+    </form>
+
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <h2>Remove ZIP password</h2>
+      <input type="hidden" name="action" value="remove_password">
+      <p>Enter the current password to create a new, unprotected ZIP.</p>
+      <input name="archive" type="file" accept=".zip,application/zip" required>
+      <label>
+        Current password
+        <input name="current_password" type="password" maxlength="128" autocomplete="current-password" required>
+      </label>
+      <button type="submit">Remove password & download</button>
+    </form>
+  </div>
+{% endblock %}

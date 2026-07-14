@@ -7,8 +7,12 @@ class UserProfile(models.Model):
         ADMIN = "admin", "Admin"
         USER = "user", "User"
 
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="profile")
-    role = models.CharField(max_length=10, choices=Role.choices, default=Role.USER, db_index=True)
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="profile"
+    )
+    role = models.CharField(
+        max_length=10, choices=Role.choices, default=Role.USER, db_index=True
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

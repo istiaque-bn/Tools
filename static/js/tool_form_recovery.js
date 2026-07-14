@@ -32,7 +32,7 @@
     form.dataset.submittedAt = String(Date.now());
     pendingForms.add(form);
 
-    // File downloads do not navigate away, so return the form to a fresh state.
+    // Downloads leave the page open, so reset the completed form.
     window.setTimeout(() => {
       if (pendingForms.has(form)) restore(form, true);
     }, 3000);

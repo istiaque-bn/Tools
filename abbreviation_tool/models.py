@@ -7,7 +7,13 @@ from django.db import models
 class AbbreviationCategory(models.Model):
     name = models.CharField(max_length=100, unique=True)
     description = models.TextField(blank=True)
-    parent = models.ForeignKey("self", blank=True, null=True, on_delete=models.SET_NULL, related_name="children")
+    parent = models.ForeignKey(
+        "self",
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="children",
+    )
     display_order = models.PositiveIntegerField(default=0)
     active = models.BooleanField(default=True)
 
@@ -23,10 +29,22 @@ class AbbreviationProfile(models.Model):
     name = models.CharField(max_length=100, unique=True)
     description = models.TextField(blank=True)
     active = models.BooleanField(default=True)
-    categories = models.ManyToManyField(AbbreviationCategory, blank=True, related_name="profiles")
-    preferred_entries = models.ManyToManyField("AbbreviationEntry", blank=True, related_name="preferred_in_profiles")
-    excluded_entries = models.ManyToManyField("AbbreviationEntry", blank=True, related_name="excluded_from_profiles")
-    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, on_delete=models.SET_NULL, related_name="created_abbreviation_profiles")
+    categories = models.ManyToManyField(
+        AbbreviationCategory, blank=True, related_name="profiles"
+    )
+    preferred_entries = models.ManyToManyField(
+        "AbbreviationEntry", blank=True, related_name="preferred_in_profiles"
+    )
+    excluded_entries = models.ManyToManyField(
+        "AbbreviationEntry", blank=True, related_name="excluded_from_profiles"
+    )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="created_abbreviation_profiles",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -45,29 +63,60 @@ class AbbreviationEntry(models.Model):
 
     abbreviation = models.CharField(max_length=100, db_index=True)
     full_form = models.CharField(max_length=500, db_index=True)
-    normalized_abbreviation = models.CharField(max_length=100, db_index=True, editable=False)
-    normalized_full_form = models.CharField(max_length=500, db_index=True, editable=False)
-    category = models.ForeignKey(AbbreviationCategory, blank=True, null=True, on_delete=models.SET_NULL, related_name="entries")
-    profiles = models.ManyToManyField(AbbreviationProfile, blank=True, related_name="entries")
+    normalized_abbreviation = models.CharField(
+        max_length=100, db_index=True, editable=False
+    )
+    normalized_full_form = models.CharField(
+        max_length=500, db_index=True, editable=False
+    )
+    category = models.ForeignKey(
+        AbbreviationCategory,
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="entries",
+    )
+    profiles = models.ManyToManyField(
+        AbbreviationProfile, blank=True, related_name="entries"
+    )
     service = models.CharField(max_length=50, blank=True)
     context = models.TextField(blank=True)
     case_sensitive = models.BooleanField(default=False)
     is_ambiguous = models.BooleanField(default=False)
     is_preferred = models.BooleanField(default=False)
     priority = models.IntegerField(default=0)
-    status = models.CharField(max_length=10, choices=Status.choices, default=Status.ACTIVE)
+    status = models.CharField(
+        max_length=10, choices=Status.choices, default=Status.ACTIVE
+    )
     source_name = models.CharField(max_length=150, blank=True)
     source_section = models.CharField(max_length=150, blank=True)
     source_page = models.PositiveIntegerField(blank=True, null=True)
     notes = models.TextField(blank=True)
-    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, on_delete=models.SET_NULL, related_name="created_abbreviation_entries")
-    updated_by = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, on_delete=models.SET_NULL, related_name="updated_abbreviation_entries")
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="created_abbreviation_entries",
+    )
+    updated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="updated_abbreviation_entries",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ("abbreviation", "-is_preferred", "-priority", "full_form")
-        constraints = [models.UniqueConstraint(fields=("normalized_abbreviation", "normalized_full_form"), name="unique_normalized_abbreviation_pair")]
+        constraints = [
+            models.UniqueConstraint(
+                fields=("normalized_abbreviation", "normalized_full_form"),
+                name="unique_normalized_abbreviation_pair",
+            )
+        ]
         permissions = [
             ("access_abbreviation_tool", "Can access SD Checker"),
             ("process_document", "Can process DOCX documents"),
@@ -105,17 +154,28 @@ class AbbreviationVariant(models.Model):
         SERVICE = "service_specific", "Service-specific"
         SPELLING = "spelling", "Spelling variant"
 
-    entry = models.ForeignKey(AbbreviationEntry, on_delete=models.CASCADE, related_name="variants")
+    entry = models.ForeignKey(
+        AbbreviationEntry, on_delete=models.CASCADE, related_name="variants"
+    )
     variant = models.CharField(max_length=500)
     normalized_variant = models.CharField(max_length=500, db_index=True, editable=False)
     variant_type = models.CharField(max_length=30, choices=VariantType.choices)
     case_sensitive = models.BooleanField(default=False)
-    status = models.CharField(max_length=10, choices=AbbreviationEntry.Status.choices, default=AbbreviationEntry.Status.ACTIVE)
+    status = models.CharField(
+        max_length=10,
+        choices=AbbreviationEntry.Status.choices,
+        default=AbbreviationEntry.Status.ACTIVE,
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        constraints = [models.UniqueConstraint(fields=("entry", "normalized_variant", "variant_type"), name="unique_abbreviation_variant")]
+        constraints = [
+            models.UniqueConstraint(
+                fields=("entry", "normalized_variant", "variant_type"),
+                name="unique_abbreviation_variant",
+            )
+        ]
 
     def save(self, *args, **kwargs):
         self.variant = " ".join(self.variant.split())
@@ -146,14 +206,24 @@ class DocumentProcessingSession(models.Model):
         DELETED = "deleted", "Deleted"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="abbreviation_sessions")
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="abbreviation_sessions",
+    )
     original_filename = models.CharField(max_length=255)
     operation_type = models.CharField(max_length=20, choices=Operation.choices)
-    profile = models.ForeignKey(AbbreviationProfile, blank=True, null=True, on_delete=models.SET_NULL)
-    replacement_policy = models.CharField(max_length=20, choices=Policy.choices, default=Policy.DEFINE_FIRST)
+    profile = models.ForeignKey(
+        AbbreviationProfile, blank=True, null=True, on_delete=models.SET_NULL
+    )
+    replacement_policy = models.CharField(
+        max_length=20, choices=Policy.choices, default=Policy.DEFINE_FIRST
+    )
     processing_options = models.JSONField(default=dict, blank=True)
     file_size = models.PositiveBigIntegerField(default=0)
-    status = models.CharField(max_length=20, choices=Status.choices, default=Status.CREATED)
+    status = models.CharField(
+        max_length=20, choices=Status.choices, default=Status.CREATED
+    )
     suggestion_count = models.PositiveIntegerField(default=0)
     accepted_count = models.PositiveIntegerField(default=0)
     rejected_count = models.PositiveIntegerField(default=0)
@@ -174,9 +244,15 @@ class ProcessingSuggestion(models.Model):
         IGNORED = "ignored", "Ignored"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    session = models.ForeignKey(DocumentProcessingSession, on_delete=models.CASCADE, related_name="suggestions")
-    abbreviation_entry = models.ForeignKey(AbbreviationEntry, blank=True, null=True, on_delete=models.SET_NULL)
-    operation_type = models.CharField(max_length=20, choices=DocumentProcessingSession.Operation.choices)
+    session = models.ForeignKey(
+        DocumentProcessingSession, on_delete=models.CASCADE, related_name="suggestions"
+    )
+    abbreviation_entry = models.ForeignKey(
+        AbbreviationEntry, blank=True, null=True, on_delete=models.SET_NULL
+    )
+    operation_type = models.CharField(
+        max_length=20, choices=DocumentProcessingSession.Operation.choices
+    )
     original_text = models.CharField(max_length=500)
     proposed_text = models.CharField(max_length=500)
     user_modified_text = models.CharField(max_length=500, blank=True)
@@ -187,19 +263,35 @@ class ProcessingSuggestion(models.Model):
     end_offset = models.PositiveIntegerField()
     confidence = models.DecimalField(max_digits=5, decimal_places=2)
     ambiguity_status = models.CharField(max_length=30, blank=True)
-    selected_meaning = models.ForeignKey(AbbreviationEntry, blank=True, null=True, on_delete=models.SET_NULL, related_name="selected_for_suggestions")
-    review_status = models.CharField(max_length=10, choices=ReviewStatus.choices, default=ReviewStatus.PENDING)
+    selected_meaning = models.ForeignKey(
+        AbbreviationEntry,
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="selected_for_suggestions",
+    )
+    review_status = models.CharField(
+        max_length=10, choices=ReviewStatus.choices, default=ReviewStatus.PENDING
+    )
     mixed_format_warning = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
 
 class AbbreviationAuditLog(models.Model):
-    abbreviation_entry = models.ForeignKey(AbbreviationEntry, blank=True, null=True, on_delete=models.SET_NULL, related_name="audit_logs")
+    abbreviation_entry = models.ForeignKey(
+        AbbreviationEntry,
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="audit_logs",
+    )
     action = models.CharField(max_length=50)
     previous_value = models.JSONField(blank=True, null=True)
     new_value = models.JSONField(blank=True, null=True)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, on_delete=models.SET_NULL)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, blank=True, null=True, on_delete=models.SET_NULL
+    )
     timestamp = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -207,7 +299,13 @@ class AbbreviationAuditLog(models.Model):
 
 
 class Feedback(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, on_delete=models.SET_NULL, related_name="abbreviation_feedback")
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="abbreviation_feedback",
+    )
     name = models.CharField(max_length=150)
     email = models.EmailField(blank=True)
     message = models.TextField(max_length=4000)

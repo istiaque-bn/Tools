@@ -9,7 +9,9 @@ def user_role(user):
     try:
         return user.profile.role
     except UserProfile.DoesNotExist:
-        profile, _ = UserProfile.objects.get_or_create(user=user, defaults={"role": UserProfile.Role.USER})
+        profile, _ = UserProfile.objects.get_or_create(
+            user=user, defaults={"role": UserProfile.Role.USER}
+        )
         return profile.role
 
 

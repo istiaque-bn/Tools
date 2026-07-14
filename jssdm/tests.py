@@ -12,9 +12,13 @@ from .parser import abbreviation_candidates
 
 class JssdmCheckerTests(TestCase):
     def setUp(self):
-        self.user = get_user_model().objects.create_user("jssdm-user", password="test-password")
+        self.user = get_user_model().objects.create_user(
+            "jssdm-user", password="test-password"
+        )
         self.client.force_login(self.user)
-        Abbreviation.objects.create(abbreviation="SITREP", meaning="Situation Report", source_page=441)
+        Abbreviation.objects.create(
+            abbreviation="SITREP", meaning="Situation Report", source_page=441
+        )
 
     def test_checker_requires_login(self):
         self.client.logout()
@@ -29,10 +33,14 @@ class JssdmCheckerTests(TestCase):
         pdf = canvas.Canvas(output)
         pdf.drawString(72, 720, "Submit SITREP and UNKNOWN before 0900.")
         pdf.save()
-        upload = SimpleUploadedFile("orders.pdf", output.getvalue(), content_type="application/pdf")
+        upload = SimpleUploadedFile(
+            "orders.pdf", output.getvalue(), content_type="application/pdf"
+        )
         response = self.client.post(reverse("jssdm:checker"), {"pdf_file": upload})
         self.assertContains(response, "Situation Report")
         self.assertContains(response, "UNKNOWN")
 
     def test_candidate_extraction(self):
-        self.assertEqual(abbreviation_candidates("Send SITREP to HQ."), ["HQ", "SITREP"])
+        self.assertEqual(
+            abbreviation_candidates("Send SITREP to HQ."), ["HQ", "SITREP"]
+        )

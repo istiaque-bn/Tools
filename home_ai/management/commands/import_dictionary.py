@@ -2,14 +2,20 @@ import json
 
 from django.core.management.base import BaseCommand, CommandError
 
-from home_ai.dictionary_provider import DictionaryLookupError, normalise_payload, save_offline
+from home_ai.dictionary_provider import (
+    DictionaryLookupError,
+    normalise_payload,
+    save_offline,
+)
 
 
 class Command(BaseCommand):
     help = "Import dictionaryapi.dev-compatible JSON into the offline dictionary"
 
     def add_arguments(self, parser):
-        parser.add_argument("file", help="JSON file containing API entries or groups of entries")
+        parser.add_argument(
+            "file", help="JSON file containing API entries or groups of entries"
+        )
 
     def handle(self, *args, **options):
         try:
@@ -30,4 +36,6 @@ class Command(BaseCommand):
                 imported += 1
             except (DictionaryLookupError, AttributeError, IndexError, TypeError):
                 skipped += 1
-        self.stdout.write(self.style.SUCCESS(f"Imported {imported} entries; skipped {skipped}."))
+        self.stdout.write(
+            self.style.SUCCESS(f"Imported {imported} entries; skipped {skipped}.")
+        )

@@ -19,7 +19,13 @@ class Command(BaseCommand):
         rows = annex_abbreviations(pdf)
         if not rows:
             raise CommandError("No Annex 16A abbreviation rows were found.")
-        unique_rows = list({(row["abbreviation"], row["meaning"]): row for row in rows}.values())
+        unique_rows = list(
+            {(row["abbreviation"], row["meaning"]): row for row in rows}.values()
+        )
         Abbreviation.objects.all().delete()
         Abbreviation.objects.bulk_create(Abbreviation(**row) for row in unique_rows)
-        self.stdout.write(self.style.SUCCESS(f"Imported {len(unique_rows)} unique JSSDM abbreviations."))
+        self.stdout.write(
+            self.style.SUCCESS(
+                f"Imported {len(unique_rows)} unique JSSDM abbreviations."
+            )
+        )

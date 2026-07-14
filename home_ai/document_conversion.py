@@ -16,7 +16,14 @@ def _libreoffice_binary():
         "/Applications/LibreOffice.app/Contents/MacOS/soffice",
         r"C:\Program Files\LibreOffice\program\soffice.exe",
     )
-    return next((candidate for candidate in candidates if shutil.which(candidate) or Path(candidate).is_file()), None)
+    return next(
+        (
+            candidate
+            for candidate in candidates
+            if shutil.which(candidate) or Path(candidate).is_file()
+        ),
+        None,
+    )
 
 
 def _validate_docx(upload):
@@ -40,7 +47,9 @@ def convert_docx_to_pdf(upload):
     _validate_docx(upload)
     executable = _libreoffice_binary()
     if not executable:
-        raise ValueError("DOCX conversion requires LibreOffice to be installed on the server.")
+        raise ValueError(
+            "DOCX conversion requires LibreOffice to be installed on the server."
+        )
 
     with tempfile.TemporaryDirectory(prefix="necessary-tools-docx-") as directory:
         root = Path(directory)
@@ -70,7 +79,9 @@ def convert_docx_to_pdf(upload):
                 check=False,
             )
         except subprocess.TimeoutExpired as exc:
-            raise ValueError("The DOCX conversion exceeded the two-minute limit.") from exc
+            raise ValueError(
+                "The DOCX conversion exceeded the two-minute limit."
+            ) from exc
         output_path = root / "document.pdf"
         if process.returncode or not output_path.exists():
             raise ValueError("LibreOffice could not convert this DOCX file.")

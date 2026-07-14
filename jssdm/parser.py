@@ -24,7 +24,9 @@ def annex_abbreviations(pdf_path):
                     continue
                 key = round(y0, 1)
                 side = "abbr" if x0 >= RIGHT_COLUMN_X else "meaning"
-                lines.setdefault(key, {"meaning": [], "abbr": []})[side].append((x0, word))
+                lines.setdefault(key, {"meaning": [], "abbr": []})[side].append(
+                    (x0, word)
+                )
 
             pending = []
             for line in (lines[key] for key in sorted(lines)):
@@ -32,16 +34,20 @@ def annex_abbreviations(pdf_path):
                 abbreviation = " ".join(word for _, word in sorted(line["abbr"]))
                 if meaning in IGNORED or re.fullmatch(r"[A-Z]", meaning or ""):
                     continue
-                if re.fullmatch(r"16A-\d+", meaning) or re.fullmatch(r"16A-\d+", abbreviation):
+                if re.fullmatch(r"16A-\d+", meaning) or re.fullmatch(
+                    r"16A-\d+", abbreviation
+                ):
                     continue
                 if meaning:
                     pending.append(meaning)
                 if abbreviation and pending:
-                    rows.append({
-                        "abbreviation": abbreviation.strip(),
-                        "meaning": " ".join(pending).strip(),
-                        "source_page": page_number,
-                    })
+                    rows.append(
+                        {
+                            "abbreviation": abbreviation.strip(),
+                            "meaning": " ".join(pending).strip(),
+                            "source_page": page_number,
+                        }
+                    )
                     pending = []
     finally:
         document.close()

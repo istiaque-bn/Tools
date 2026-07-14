@@ -1,0 +1,13 @@
+{% extends 'admin_panel/base_admin.html' %}
+{% block title %}System{% endblock %}
+{% block page_title %}System health and data{% endblock %}
+{% block content %}
+<div class="stat-grid">
+  {% for name,check in checks.items %}<article><span>{{ name|title }}</span><strong>{% if check.ok %}Healthy{% else %}Attention{% endif %}</strong><small>{{ check.detail }}</small></article>{% endfor %}
+</div>
+<div class="panel-grid">
+  <section class="panel-card"><h2>Database backup</h2><p>Download a PostgreSQL custom-format backup containing all application data.</p><a class="panel-action" href="{% url 'admin_panel:database_backup' %}">Download backup</a></section>
+  <section class="panel-card"><h2>Database restore</h2><p>This replaces the current PostgreSQL data. Create a backup first.</p><form method="post" action="{% url 'admin_panel:database_restore' %}" enctype="multipart/form-data" onsubmit="return confirm('Replace the current database with this backup?');">{% csrf_token %}<input name="backup" type="file" accept=".backup,.dump" required><label><input name="confirm_restore" type="checkbox" value="yes" required> I understand this replaces current data</label><button type="submit">Restore backup</button></form></section>
+  <section class="panel-card"><h2>Audit export</h2><p>Export abbreviation changes and document-processing activity.</p><a class="panel-action" href="{% url 'admin_panel:audit_export' %}">Download CSV</a></section>
+</div>
+{% endblock %}

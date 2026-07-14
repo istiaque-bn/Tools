@@ -9,6 +9,7 @@
     <a href="{% url 'abbreviation_tool:manage_dictionary' %}">Abbreviations</a>
     <a href="{% url 'admin_panel:feedback_list' %}"{% if request.resolver_match.url_name == 'feedback_list' %} class="active"{% endif %}>Feedback</a>
     <a href="{% url 'admin_panel:audit_log' %}"{% if request.resolver_match.url_name == 'audit_log' %} class="active"{% endif %}>Audit log</a>
+    <a href="{% url 'admin_panel:system' %}"{% if request.resolver_match.url_name == 'system' %} class="active"{% endif %}>System</a>
   </nav>
   <a class="back-site" href="{% url 'home' %}">← Back to site</a>
 </aside>

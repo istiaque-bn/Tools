@@ -14,7 +14,9 @@ class AdminUserCreationForm(UserCreationForm):
     first_name = forms.CharField(required=False, max_length=150)
     last_name = forms.CharField(required=False, max_length=150)
     email = forms.EmailField(required=False)
-    role = forms.ChoiceField(choices=UserProfile.Role.choices, initial=UserProfile.Role.USER)
+    role = forms.ChoiceField(
+        choices=UserProfile.Role.choices, initial=UserProfile.Role.USER
+    )
     is_active = forms.BooleanField(required=False, initial=True)
 
     class Meta(UserCreationForm.Meta):

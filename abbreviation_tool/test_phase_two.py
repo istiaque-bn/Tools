@@ -2,7 +2,6 @@ import tempfile
 import zipfile
 from datetime import timedelta
 from io import BytesIO
-from pathlib import Path
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
@@ -17,9 +16,9 @@ from .storage import cleanup_expired, session_directory
 from .validators import DOCX_MIME, validate_docx
 
 
-CONTENT_TYPES = b'''<?xml version="1.0"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>'''
-RELS = b'''<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"></Relationships>'''
-DOCUMENT = b'''<?xml version="1.0"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:r><w:t>Test</w:t></w:r></w:p></w:body></w:document>'''
+CONTENT_TYPES = b"""<?xml version="1.0"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>"""
+RELS = b"""<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"></Relationships>"""
+DOCUMENT = b"""<?xml version="1.0"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:r><w:t>Test</w:t></w:r></w:p></w:body></w:document>"""
 
 
 def docx_upload(name="document.docx", additions=None, content_type=DOCX_MIME):
@@ -33,7 +32,12 @@ def docx_upload(name="document.docx", additions=None, content_type=DOCX_MIME):
     return SimpleUploadedFile(name, output.getvalue(), content_type=content_type)
 
 
-@override_settings(DOCX_ABBREVIATION_MAX_UPLOAD_MB=2, DOCX_ABBREVIATION_MAX_UNCOMPRESSED_MB=5, DOCX_ABBREVIATION_MAX_ZIP_RATIO=100, DOCX_ABBREVIATION_MAX_ZIP_MEMBERS=100)
+@override_settings(
+    DOCX_ABBREVIATION_MAX_UPLOAD_MB=2,
+    DOCX_ABBREVIATION_MAX_UNCOMPRESSED_MB=5,
+    DOCX_ABBREVIATION_MAX_ZIP_RATIO=100,
+    DOCX_ABBREVIATION_MAX_ZIP_MEMBERS=100,
+)
 class DocxValidationTests(TestCase):
     def test_valid_docx(self):
         self.assertEqual(validate_docx(docx_upload()).member_count, 3)
@@ -42,7 +46,9 @@ class DocxValidationTests(TestCase):
         with self.assertRaises(ValidationError):
             validate_docx(docx_upload("document.pdf"))
         with self.assertRaises(ValidationError):
-            validate_docx(SimpleUploadedFile("fake.docx", b"not a zip", content_type=DOCX_MIME))
+            validate_docx(
+                SimpleUploadedFile("fake.docx", b"not a zip", content_type=DOCX_MIME)
+            )
 
     def test_rejects_macro_and_path_traversal(self):
         with self.assertRaises(ValidationError):
@@ -51,18 +57,30 @@ class DocxValidationTests(TestCase):
             validate_docx(docx_upload(additions={"../escape.xml": b"unsafe"}))
 
     def test_rejects_external_relationship(self):
-        external = b'''<Relationships><Relationship TargetMode="External" Target="https://example.com"/></Relationships>'''
+        external = b"""<Relationships><Relationship TargetMode="External" Target="https://example.com"/></Relationships>"""
         with self.assertRaises(ValidationError):
-            validate_docx(docx_upload(additions={"word/_rels/document.xml.rels": external}))
+            validate_docx(
+                docx_upload(additions={"word/_rels/document.xml.rels": external})
+            )
 
 
 class SecureSessionTests(TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
-        self.override = override_settings(DOCX_ABBREVIATION_TEMP_ROOT=self.temp.name, DOCX_ABBREVIATION_MAX_UPLOAD_MB=2, DOCX_ABBREVIATION_MAX_UNCOMPRESSED_MB=5, DOCX_ABBREVIATION_MAX_ZIP_RATIO=100, DOCX_ABBREVIATION_MAX_ZIP_MEMBERS=100)
+        self.override = override_settings(
+            DOCX_ABBREVIATION_TEMP_ROOT=self.temp.name,
+            DOCX_ABBREVIATION_MAX_UPLOAD_MB=2,
+            DOCX_ABBREVIATION_MAX_UNCOMPRESSED_MB=5,
+            DOCX_ABBREVIATION_MAX_ZIP_RATIO=100,
+            DOCX_ABBREVIATION_MAX_ZIP_MEMBERS=100,
+        )
         self.override.enable()
-        self.user = get_user_model().objects.create_user("session-user", password="test-password")
-        self.other = get_user_model().objects.create_user("other-user", password="test-password")
+        self.user = get_user_model().objects.create_user(
+            "session-user", password="test-password"
+        )
+        self.other = get_user_model().objects.create_user(
+            "other-user", password="test-password"
+        )
         self.user.groups.add(Group.objects.get(name="DOCX Abbreviation Users"))
         self.other.groups.add(Group.objects.get(name="DOCX Abbreviation Users"))
         self.profile = AbbreviationProfile.objects.get(name="General")
@@ -73,11 +91,16 @@ class SecureSessionTests(TestCase):
         self.temp.cleanup()
 
     def create_session(self):
-        response = self.client.post(reverse("abbreviation_tool:upload"), {
-            "operation_type": "abbreviate", "profile": self.profile.id,
-            "replacement_policy": "define_first", "include_tables": "on",
-            "pdf_file": docx_upload(),
-        })
+        response = self.client.post(
+            reverse("abbreviation_tool:upload"),
+            {
+                "operation_type": "abbreviate",
+                "profile": self.profile.id,
+                "replacement_policy": "define_first",
+                "include_tables": "on",
+                "pdf_file": docx_upload(),
+            },
+        )
         self.assertEqual(response.status_code, 302)
         return DocumentProcessingSession.objects.latest("created_at")
 
@@ -91,11 +114,18 @@ class SecureSessionTests(TestCase):
     def test_cross_user_access_is_not_found(self):
         session = self.create_session()
         self.client.force_login(self.other)
-        self.assertEqual(self.client.get(reverse("abbreviation_tool:session", args=[session.id])).status_code, 404)
+        self.assertEqual(
+            self.client.get(
+                reverse("abbreviation_tool:session", args=[session.id])
+            ).status_code,
+            404,
+        )
 
     def test_cancel_deletes_files_and_marks_session(self):
         session = self.create_session()
-        response = self.client.post(reverse("abbreviation_tool:cancel", args=[session.id]))
+        response = self.client.post(
+            reverse("abbreviation_tool:cancel", args=[session.id])
+        )
         self.assertEqual(response.status_code, 302)
         session.refresh_from_db()
         self.assertFalse(session_directory(session.id).exists())
