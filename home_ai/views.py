@@ -1,6 +1,7 @@
 import base64
 import json
 import zipfile
+from pathlib import Path
 from io import BytesIO
 
 import fitz
@@ -337,6 +338,35 @@ def pdf_toolkit_view(request):
             images[0].save(output, "PDF", save_all=True, append_images=images[1:])
             output.seek(0)
             return FileResponse(output, as_attachment=True, filename="images.pdf", content_type="application/pdf")
+
+        if action == "docx_to_pdf":
+            from .document_conversion import convert_docx_to_pdf
+
+            uploads = request.FILES.getlist("docx_files")
+            if not uploads:
+                raise ValueError("Choose at least one Word .docx file.")
+            if len(uploads) > 20:
+                raise ValueError("Convert no more than 20 DOCX files at once.")
+            if len(uploads) == 1:
+                output = convert_docx_to_pdf(uploads[0])
+                filename = f"{Path(uploads[0].name).stem[:100] or 'document'}.pdf"
+                return FileResponse(output, as_attachment=True, filename=filename, content_type="application/pdf")
+
+            archive = BytesIO()
+            used_names = set()
+            with zipfile.ZipFile(archive, "w", compression=zipfile.ZIP_DEFLATED) as bundle:
+                for position, upload in enumerate(uploads, start=1):
+                    output = convert_docx_to_pdf(upload)
+                    stem = Path(upload.name).stem[:100] or f"document-{position}"
+                    filename = f"{stem}.pdf"
+                    suffix = 2
+                    while filename.casefold() in used_names:
+                        filename = f"{stem}-{suffix}.pdf"
+                        suffix += 1
+                    used_names.add(filename.casefold())
+                    bundle.writestr(filename, output.getvalue())
+            archive.seek(0)
+            return FileResponse(archive, as_attachment=True, filename="converted-docx-files.zip", content_type="application/zip")
 
         raise ValueError("Select a valid PDF action.")
     except (PdfReadError, ValueError, TypeError, OSError) as exc:

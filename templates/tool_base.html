@@ -30,13 +30,7 @@
 
     <footer class="site-footer"><strong>Necessary Tools</strong><span>&copy; 2026. Built for what matters.</span></footer>
 
-    <script>
-        document.querySelectorAll('form').forEach(f => f.addEventListener('submit', () => {
-            const b = f.querySelector('button[type=submit]');
-            if (b) { b.dataset.label = b.textContent; b.textContent = 'Processing…'; b.disabled = true; }
-        }));
-
-    </script>
+    <script src="{% static 'js/tool_form_recovery.js' %}"></script>
     {% block script %}{% endblock %}
 </body>
 </html>

@@ -1,6 +1,7 @@
 from io import BytesIO
 import zipfile
 import json
+from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -137,6 +138,55 @@ class PdfToolkitTests(TestCase):
         self.assertEqual(reader.pages[0].rotation, 0)
         self.assertEqual(reader.pages[1].rotation, 90)
         self.assertEqual(reader.pages[2].rotation, 0)
+
+    @patch("home_ai.document_conversion.convert_docx_to_pdf")
+    def test_docx_to_pdf_returns_download(self, converter):
+        self.client.force_login(self.user)
+        pdf = BytesIO()
+        writer = PdfWriter()
+        writer.add_blank_page(width=612, height=792)
+        writer.write(pdf)
+        pdf.seek(0)
+        converter.return_value = pdf
+        upload = SimpleUploadedFile(
+            "report.docx",
+            b"test document",
+            content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        )
+
+        response = self.client.post(reverse("pdf_toolkit"), {"action": "docx_to_pdf", "docx_files": [upload]})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "application/pdf")
+        self.assertIn("report.pdf", response["Content-Disposition"])
+        self.assertEqual(len(PdfReader(BytesIO(b"".join(response.streaming_content))).pages), 1)
+
+    @patch("home_ai.document_conversion.convert_docx_to_pdf")
+    def test_multiple_docx_files_return_zip_of_pdfs(self, converter):
+        self.client.force_login(self.user)
+
+        def converted(_upload):
+            output = BytesIO()
+            writer = PdfWriter()
+            writer.add_blank_page(width=612, height=792)
+            writer.write(output)
+            output.seek(0)
+            return output
+
+        converter.side_effect = converted
+        uploads = [
+            SimpleUploadedFile("one.docx", b"one"),
+            SimpleUploadedFile("two.docx", b"two"),
+        ]
+
+        response = self.client.post(reverse("pdf_toolkit"), {"action": "docx_to_pdf", "docx_files": uploads})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "application/zip")
+        archive = zipfile.ZipFile(BytesIO(b"".join(response.streaming_content)))
+        self.assertEqual(archive.namelist(), ["one.pdf", "two.pdf"])
+        for name in archive.namelist():
+            self.assertEqual(len(PdfReader(BytesIO(archive.read(name))).pages), 1)
 
 
 class ImageToolkitTests(TestCase):

@@ -104,6 +104,7 @@
                 <form class="utility-card" method="post" enctype="multipart/form-data">{% csrf_token %}<input type="hidden" name="action" value="protect"><span class="utility-icon">&#128274;</span><h3>Protect PDF</h3><p>Encrypt a PDF with a password.</p><input name="pdf_file" type="file" accept=".pdf" required><input name="new_password" type="password" minlength="6" placeholder="New password" required><button>Protect & download</button></form>
                 <form class="utility-card" method="post" enctype="multipart/form-data">{% csrf_token %}<input type="hidden" name="action" value="unlock"><span class="utility-icon">&#128275;</span><h3>Unlock PDF</h3><p>Remove encryption using its password.</p><input name="pdf_file" type="file" accept=".pdf" required><input name="current_password" type="password" placeholder="Current password" required><button>Unlock & download</button></form>
                 <form class="utility-card" method="post" enctype="multipart/form-data">{% csrf_token %}<input type="hidden" name="action" value="image_to_pdf"><span class="utility-icon">&#9635;</span><h3>Images to PDF</h3><p>Combine JPG and PNG images into a PDF.</p><input name="image_files" type="file" accept=".jpg,.jpeg,.png" multiple required><button>Convert & download</button></form>
+                <form class="utility-card" method="post" enctype="multipart/form-data">{% csrf_token %}<input type="hidden" name="action" value="docx_to_pdf"><span class="utility-icon">W→</span><h3>DOCX to PDF</h3><p>Convert one Word document to PDF, or download multiple conversions in a ZIP file.</p><input name="docx_files" type="file" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" multiple required><button>Convert & download</button></form>
             </div>
         </section>
 
@@ -224,6 +225,7 @@
             visualForm.submit();
         });
     </script>
+    <script src="{% static 'js/tool_form_recovery.js' %}"></script>
     <footer class="site-footer"><strong>Necessary Tools</strong><span>&copy; 2026. Built for what matters.</span></footer>
 </body>
 </html>
